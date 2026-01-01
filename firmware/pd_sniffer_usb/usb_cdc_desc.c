@@ -2,9 +2,30 @@
 #include <libopencm3/usb/cdc.h>
 #include <string.h>
 
-/* -------------------------------------------------------------------------- */
-/* Strings                                                                     */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* USB Device Descriptor          */
+/* ============================== */
+
+const struct usb_device_descriptor dev_descr = {
+    .bLength            = USB_DT_DEVICE_SIZE,
+    .bDescriptorType    = USB_DT_DEVICE,
+    .bcdUSB             = 0x0200,
+    .bDeviceClass       = USB_CLASS_CDC,
+    .bDeviceSubClass    = 0,
+    .bDeviceProtocol    = 0,
+    .bMaxPacketSize0    = 64,
+    .idVendor           = 0x1209,   /* pid.codes */
+    .idProduct          = 0x0001,
+    .bcdDevice          = 0x0100,
+    .iManufacturer      = 1,
+    .iProduct           = 2,
+    .iSerialNumber      = 3,
+    .bNumConfigurations = 1,
+};
+
+/* ============================== */
+/* USB Strings                    */
+/* ============================== */
 
 const char *usb_strings[] = {
     "PD Debugger",
@@ -12,38 +33,38 @@ const char *usb_strings[] = {
     "0001",
 };
 
-/* -------------------------------------------------------------------------- */
-/* Endpoints                                                                   */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* Endpoints                      */
+/* ============================== */
 
 static const struct usb_endpoint_descriptor comm_ep = {
-    .bLength = USB_DT_ENDPOINT_SIZE,
-    .bDescriptorType = USB_DT_ENDPOINT,
+    .bLength          = USB_DT_ENDPOINT_SIZE,
+    .bDescriptorType  = USB_DT_ENDPOINT,
     .bEndpointAddress = 0x83, /* IN */
-    .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-    .wMaxPacketSize = 16,
-    .bInterval = 255,
+    .bmAttributes     = USB_ENDPOINT_ATTR_INTERRUPT,
+    .wMaxPacketSize   = 16,
+    .bInterval        = 255,
 };
 
 static const struct usb_endpoint_descriptor data_ep[] = {{
-    .bLength = USB_DT_ENDPOINT_SIZE,
-    .bDescriptorType = USB_DT_ENDPOINT,
+    .bLength          = USB_DT_ENDPOINT_SIZE,
+    .bDescriptorType  = USB_DT_ENDPOINT,
     .bEndpointAddress = 0x01, /* OUT */
-    .bmAttributes = USB_ENDPOINT_ATTR_BULK,
-    .wMaxPacketSize = 64,
-    .bInterval = 1,
+    .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
+    .wMaxPacketSize   = 64,
+    .bInterval        = 1,
 }, {
-    .bLength = USB_DT_ENDPOINT_SIZE,
-    .bDescriptorType = USB_DT_ENDPOINT,
+    .bLength          = USB_DT_ENDPOINT_SIZE,
+    .bDescriptorType  = USB_DT_ENDPOINT,
     .bEndpointAddress = 0x82, /* IN */
-    .bmAttributes = USB_ENDPOINT_ATTR_BULK,
-    .wMaxPacketSize = 64,
-    .bInterval = 1,
+    .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
+    .wMaxPacketSize   = 64,
+    .bInterval        = 1,
 }};
 
-/* -------------------------------------------------------------------------- */
-/* Interfaces                                                                  */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* CDC Functional Descriptors     */
+/* ============================== */
 
 static const struct {
     struct usb_cdc_header_descriptor header;
@@ -79,77 +100,64 @@ static const struct {
     }
 };
 
+/* ============================== */
+/* Interfaces                     */
+/* ============================== */
+
 static const struct usb_interface_descriptor comm_iface = {
-    .bLength = USB_DT_INTERFACE_SIZE,
-    .bDescriptorType = USB_DT_INTERFACE,
-    .bInterfaceNumber = 0,
-    .bAlternateSetting = 0,
-    .bNumEndpoints = 1,
-    .bInterfaceClass = USB_CLASS_CDC,
+    .bLength            = USB_DT_INTERFACE_SIZE,
+    .bDescriptorType    = USB_DT_INTERFACE,
+    .bInterfaceNumber   = 0,
+    .bAlternateSetting  = 0,
+    .bNumEndpoints      = 1,
+    .bInterfaceClass    = USB_CLASS_CDC,
     .bInterfaceSubClass = USB_CDC_SUBCLASS_ACM,
     .bInterfaceProtocol = USB_CDC_PROTOCOL_AT,
-    .endpoint = &comm_ep,
-    .extra = &cdc_func_desc,
-    .extralen = sizeof(cdc_func_desc),
+    .endpoint           = &comm_ep,
+    .extra              = &cdc_func_desc,
+    .extralen           = sizeof(cdc_func_desc),
 };
 
 static const struct usb_interface_descriptor data_iface = {
-    .bLength = USB_DT_INTERFACE_SIZE,
-    .bDescriptorType = USB_DT_INTERFACE,
-    .bInterfaceNumber = 1,
-    .bAlternateSetting = 0,
-    .bNumEndpoints = 2,
-    .bInterfaceClass = USB_CLASS_DATA,
-    .endpoint = data_ep,
+    .bLength            = USB_DT_INTERFACE_SIZE,
+    .bDescriptorType    = USB_DT_INTERFACE,
+    .bInterfaceNumber   = 1,
+    .bAlternateSetting  = 0,
+    .bNumEndpoints      = 2,
+    .bInterfaceClass    = USB_CLASS_DATA,
+    .endpoint           = data_ep,
 };
 
 static const struct usb_interface interfaces[] = {{
     .num_altsetting = 1,
-    .altsetting = &comm_iface,
+    .altsetting     = &comm_iface,
 }, {
     .num_altsetting = 1,
-    .altsetting = &data_iface,
+    .altsetting     = &data_iface,
 }};
 
-/* -------------------------------------------------------------------------- */
-/* Configuration                                                              */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* Configuration Descriptor       */
+/* ============================== */
 
 const struct usb_config_descriptor config_descr = {
-    .bLength = USB_DT_CONFIGURATION_SIZE,
-    .bDescriptorType = USB_DT_CONFIGURATION,
-    .wTotalLength =
+    .bLength             = USB_DT_CONFIGURATION_SIZE,
+    .bDescriptorType     = USB_DT_CONFIGURATION,
+    .wTotalLength        =
         USB_DT_CONFIGURATION_SIZE +
         USB_DT_INTERFACE_SIZE * 2 +
         USB_DT_ENDPOINT_SIZE * 3 +
         sizeof(cdc_func_desc),
-    .bNumInterfaces = 2,
+    .bNumInterfaces      = 2,
     .bConfigurationValue = 1,
-    .bmAttributes = 0x80,
-    .bMaxPower = 50,
-    .interface = interfaces,
+    .bmAttributes        = 0x80,
+    .bMaxPower           = 50,
+    .interface           = interfaces,
 };
 
-const struct usb_device_descriptor dev_descr = {
-    .bLength = USB_DT_DEVICE_SIZE,
-    .bDescriptorType = USB_DT_DEVICE,
-    .bcdUSB = 0x0200,            /* USB 2.0 */
-    .bDeviceClass = USB_CLASS_CDC,      /* CDC at device level is OK */
-    .bDeviceSubClass = 0,
-    .bDeviceProtocol = 0,
-    .bMaxPacketSize0 = 64,       /* EP0 max packet size */
-    .idVendor = 0x1209,          /* pid.codes shared VID (recommended) */
-    .idProduct = 0x0001,         /* choose any free PID */
-    .bcdDevice = 0x0100,         /* device release */
-    .iManufacturer = 1,
-    .iProduct = 2,
-    .iSerialNumber = 3,
-    .bNumConfigurations = 1,
-};
-
-/* -------------------------------------------------------------------------- */
-/* CDC control requests (REQUIRED FOR WINDOWS)                                 */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* CDC Control Requests           */
+/* ============================== */
 
 static enum usbd_request_return_codes cdc_control_request(
     usbd_device *dev,
@@ -159,6 +167,7 @@ static enum usbd_request_return_codes cdc_control_request(
     void (**complete)(usbd_device *, struct usb_setup_data *)
 ) {
     (void)dev;
+    (void)buf;
     (void)complete;
 
     switch (req->bRequest) {
@@ -177,12 +186,14 @@ static enum usbd_request_return_codes cdc_control_request(
     return USBD_REQ_NOTSUPP;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Public hook                                                                 */
-/* -------------------------------------------------------------------------- */
+/* ============================== */
+/* Set-Config Callback            */
+/* ============================== */
 
-void cdcacm_set_config(usbd_device *dev)
+void cdcacm_set_config(usbd_device *dev, uint16_t wValue)
 {
+    (void)wValue;
+
     usbd_ep_setup(dev, 0x01, USB_ENDPOINT_ATTR_BULK, 64, NULL);
     usbd_ep_setup(dev, 0x82, USB_ENDPOINT_ATTR_BULK, 64, NULL);
     usbd_ep_setup(dev, 0x83, USB_ENDPOINT_ATTR_INTERRUPT, 16, NULL);

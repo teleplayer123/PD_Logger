@@ -14,6 +14,8 @@
 
 #include "fusb302.h"
 
+#define USB_RX_BUF_SZ 256
+
 /* -------------------------------------------------------------------------- */
 /* Global timebase                                                             */
 /* -------------------------------------------------------------------------- */
@@ -29,10 +31,15 @@ void sys_tick_handler(void)
 /* USB CDC                                                                    */
 /* -------------------------------------------------------------------------- */
 static usbd_device *usbdev;
-#define USB_RX_BUF_SZ 256
+static uint8_t usbd_control_buffer[128];
 static uint8_t usb_rx_buf[USB_RX_BUF_SZ];
 static volatile uint16_t usb_rx_head;
 static volatile uint16_t usb_rx_tail;
+
+extern const struct usb_device_descriptor dev_descr;
+extern const struct usb_config_descriptor config_descr;
+extern const char *usb_strings[];
+extern void cdcacm_set_config(usbd_device *dev, uint16_t wValue);
 
 static void usb_write(const char *s, int len)
 {
@@ -89,17 +96,8 @@ static void cdc_rx_cb(usbd_device *dev, uint8_t ep)
     }
 }
 
-static uint8_t usbd_control_buffer[128];
-
-extern const struct usb_device_descriptor dev_descr;
-extern const struct usb_config_descriptor config_descr;
-extern const char *usb_strings[];
-extern void cdcacm_set_config(usbd_device *dev);
-
 static void usb_setup(void)
 {
-    rcc_periph_clock_enable(RCC_USB);
-
     usbdev = usbd_init(
         &st_usbfs_v2_usb_driver,
         &dev_descr,
