@@ -1164,8 +1164,6 @@ int main(void)
     exti_setup(); 
 
     fusb_setup();
-    fusb_sop_prime_db_enable(true);
-    fusb_sop_prime_enable(true);
 
     while (1) {
         if (usart_rx_ready()) {
