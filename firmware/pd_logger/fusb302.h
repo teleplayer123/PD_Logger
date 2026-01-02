@@ -114,6 +114,8 @@
 #define FUSB302_CTL2_WAKE_EN        (1 << 3)
 #define FUSB302_CTL2_MODE_POS       1
 #define FUSB302_CTL2_MODE_MASK      (3 << FUSB302_CTL2_MODE_POS)
+#define FUSB302_CTL2_MODE_1         (1 << 2)
+#define FUSB302_CTL2_MODE_0         (1 << 1)
 #define FUSB302_CTL2_TOGGLE         (1 << 0)
 
 #define FUSB302_CTL2_MODE_UFP       (0 << FUSB302_CTL2_MODE_POS)
@@ -446,6 +448,28 @@ static const struct bit_name fusb302_control0_bits[] = {
     {FUSB302_CTL0_TX_START, "TX_START"},
 };
 
+static const struct bit_name fusb302_control1_bits[] = {
+    {BIT(7), NULL},
+    {FUSB302_CTL1_ENSOP2DB, "ENSOP2DB"},
+    {FUSB302_CTL1_ENSOP1DB, "ENSOP1DB"},
+    {FUSB302_CTL1_BIST_MODE2, "BIST_MODE2"},
+    {BIT(3), NULL},
+    {FUSB302_CTL1_RX_FLUSH, "RX_FLUSH"},
+    {FUSB302_CTL1_ENSOP2, "ENSOP2"},
+    {FUSB302_CTL1_ENSOP1, "ENSOP1"},
+};
+
+static const struct bit_name fusb302_control2_bits[] = {
+    {FUSB302_CTL2_TOG_SAVE_PWR2, "TOG_SAVE_PWR2"},
+    {FUSB302_CTL2_TOG_SAVE_PWR1, "TOG_SAVE_PWR1"},
+    {FUSB302_CTL2_TOG_RD_ONLY, "TOG_RD_ONLY"},
+    {BIT(4), NULL},
+    {FUSB302_CTL2_WAKE_EN, "WAKE_EN"},
+    {FUSB302_CTL2_MODE_1, "MODE_1"},
+    {FUSB302_CTL2_MODE_0, "MODE_0"},
+    {FUSB302_CTL2_TOGGLE, "TOGGLE"},
+};
+
 static const struct bit_name fusb302_control3_bits[] = {
     {BIT(7), NULL},
     {FUSB302_CTL3_SEND_HARD_RESET, "SEND_HARD_RESET"},
@@ -479,6 +503,17 @@ static const struct bit_name fusb302_maska_bits[] = {
     {FUSB302_MASKA_TXSENT, "TXSENT"},
     {FUSB302_MASKA_SOFTRST, "SOFTRST"},
     {FUSB302_MASKA_HARDRST, "HARDRST"},
+};
+
+static const struct bit_name fusb302_maskb_bits[] = {
+    {BIT(7), NULL},
+    {BIT(6), NULL},
+    {BIT(5), NULL},
+    {BIT(4), NULL},
+    {BIT(3), NULL},
+    {BIT(2), NULL},
+    {BIT(1), NULL},
+    {FUSB302_MASKB_GCRCSENT, "GCRCSENT"},
 };
 
 #endif /* FUSB302_H */

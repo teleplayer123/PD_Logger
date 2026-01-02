@@ -298,6 +298,20 @@ static void fusb_clear_interrupts(void)
     fusb_read(FUSB302_REG_INTERRUPTB);
 }
 
+static void fusb_sop_prime_enable(void)
+{
+    int reg = fusb_read(FUSB302_REG_CONTROL1);
+    reg |= (FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
+    fusb_write(FUSB302_REG_CONTROL1, reg);
+}
+
+static void fusb_sop_prime_disable(void)
+{
+    int reg = fusb_read(FUSB302_REG_CONTROL1);
+    reg &= ~(FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
+    fusb_write(FUSB302_REG_CONTROL1, reg);
+}
+
 // Print current state struct values for debugging
 static void fusb_current_state(void)
 {
@@ -412,6 +426,66 @@ static void fusb_check_status_regs(void)
     usart_printf("---- STATUS1A ----\r\n");
     reg = fusb_read(FUSB302_REG_STATUS1A);
     dump_bits(reg, fusb302_status1a_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_control_regs(void)
+{
+    uint8_t reg;
+    // Read and print control0 bits
+    usart_printf("---- CONTROL0 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL0);
+    dump_bits(reg, fusb302_control0_bits);
+    usart_printf("\r\n");
+    // Read and print control1 bits
+    usart_printf("---- CONTROL1 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL1);
+    dump_bits(reg, fusb302_control1_bits);
+    usart_printf("\r\n");
+    // Read and print control2 bits
+    usart_printf("---- CONTROL2 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL2);
+    dump_bits(reg, fusb302_control2_bits);
+    usart_printf("\r\n");
+    // Read and print control3 bits
+    usart_printf("---- CONTROL3 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL3);
+    dump_bits(reg, fusb302_control3_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_switches_regs(void)
+{
+    uint8_t reg;
+    // Read and print switches0 bits
+    usart_printf("---- SWITCHES0 ----\r\n");
+    reg = fusb_read(FUSB302_REG_SWITCHES0);
+    dump_bits(reg, fusb302_switches0_bits);
+    usart_printf("\r\n");
+    // Read and print switches1 bits
+    usart_printf("---- SWITCHES1 ----\r\n");
+    reg = fusb_read(FUSB302_REG_SWITCHES1);
+    dump_bits(reg, fusb302_switches1_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_mask_regs(void)
+{
+    uint8_t reg;
+    // Read and print mask bits
+    usart_printf("---- MASK ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASK);
+    dump_bits(reg, fusb302_mask_bits);
+    usart_printf("\r\n");
+    // Read and print maskA bits
+    usart_printf("---- MASKA ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASKA);
+    dump_bits(reg, fusb302_maska_bits);
+    usart_printf("\r\n");
+    // Read and print maskB bits
+    usart_printf("---- MASKB ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASKB);
+    dump_bits(reg, fusb302_maskb_bits);
     usart_printf("\r\n");
 }
 
@@ -722,6 +796,9 @@ static int fusb_check_cc_voltage(void)
 static void fusb_get_status(void)
 {
     fusb_check_status_regs();
+    fusb_check_switches_regs();
+    fusb_check_control_regs();
+    fusb_check_mask_regs();
     usart_printf("INT pin=%02X\r\n", gpio_get(GPIOB, GPIO8) ? 1 : 0);
     fusb_current_state();
     if (!fusb_rx_empty()) {
