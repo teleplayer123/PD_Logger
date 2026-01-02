@@ -70,7 +70,8 @@
 #define FUSB302_MEAS_VBUS           (1 << 6)
 #define FUSB302_MEAS_MDAC_MASK      0x3F
 // Convert voltage to MDAC code for programming the fusb302
-#define FUSB302_MEAS_MDAC_MV(mv)    (((mv)/42) & 0x3F) // MDAC step = 42mV
+#define DIV_ROUND_NEAREST(x, y) (((x) + ((y) / 2)) / (y))
+#define FUSB302_MEAS_MDAC_MV(mv)    (DIV_ROUND_NEAREST((mv), 42) & 0x3F) // MDAC step = 42mV
 
 /* -----------------------------------------------------------
  * SLICE (0x05)
