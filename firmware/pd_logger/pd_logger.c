@@ -298,31 +298,31 @@ static void fusb_clear_interrupts(void)
     fusb_read(FUSB302_REG_INTERRUPTB);
 }
 
-static void fusb_sop_prime_enable(void)
+static void fusb_sop_prime_enable(bool enable)
 {
-    int reg = fusb_read(FUSB302_REG_CONTROL1);
-    reg |= (FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
+    uint8_t reg;
+    if (enable) {
+        reg = fusb_read(FUSB302_REG_CONTROL1);
+        reg |= (FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
+    
+    } else {
+        reg = fusb_read(FUSB302_REG_CONTROL1);
+        reg &= ~(FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
+    }
     fusb_write(FUSB302_REG_CONTROL1, reg);
 }
 
-static void fusb_sop_prime_disable(void)
+static void fusb_sop_prime_db_enable(bool enable)
 {
-    int reg = fusb_read(FUSB302_REG_CONTROL1);
-    reg &= ~(FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2);
-    fusb_write(FUSB302_REG_CONTROL1, reg);
-}
+    uint8_t reg;
+    if (enable) {
+        reg = fusb_read(FUSB302_REG_CONTROL1);
+        reg |= (FUSB302_CTL1_ENSOP1DB | FUSB302_CTL1_ENSOP2DB);
 
-static void fusb_sop_prime_db_enable(void)
-{
-    int reg = fusb_read(FUSB302_REG_CONTROL1);
-    reg |= (FUSB302_CTL1_ENSOP1DB | FUSB302_CTL1_ENSOP2DB);
-    fusb_write(FUSB302_REG_CONTROL1, reg);
-}
-
-static void fusb_sop_prime_db_disable(void)
-{
-    int reg = fusb_read(FUSB302_REG_CONTROL1);
-    reg &= ~(FUSB302_CTL1_ENSOP1DB | FUSB302_CTL1_ENSOP2DB);
+    } else {
+        reg = fusb_read(FUSB302_REG_CONTROL1);
+        reg &= ~(FUSB302_CTL1_ENSOP1DB | FUSB302_CTL1_ENSOP2DB);
+    }
     fusb_write(FUSB302_REG_CONTROL1, reg);
 }
 
@@ -1164,7 +1164,8 @@ int main(void)
     exti_setup(); 
 
     fusb_setup();
-    fusb_init_sink();
+    fusb_sop_prime_db_enable(true);
+    fusb_sop_prime_enable(true);
 
     while (1) {
         if (usart_rx_ready()) {
