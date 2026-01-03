@@ -18,6 +18,10 @@
  * Globals
  * ------------------------------------------------------------ */
 
+#define I2C_TIMEOUT 100000
+
+#define PACKET_IS_GOOD_CRC(head) (PD_HEADER_MESSAGE_TYPE(head) == PD_CTRL_GOOD_CRC && PD_HEADER_NUM_DATA_OBJECTS(head) == 0)
+
 volatile uint32_t system_millis;
 
 static struct fusb302_chip_state {
@@ -226,6 +230,78 @@ static void fusb_read_fifo(uint8_t *buf, int len)
 {
     uint8_t r = FUSB302_REG_FIFOS;
     i2c_transfer7(I2C1, FUSB302_ADDR, &r, 1, buf, len);
+}
+
+static int i2c_start_write(uint32_t i2c, uint8_t addr, uint8_t len)
+{
+    uint32_t timeout = I2C_TIMEOUT;
+
+    /* Wait until bus not busy */
+    while (I2C_ISR(i2c) & I2C_ISR_BUSY)
+        if (--timeout == 0) return -1;
+
+    /* Configure transfer */
+    I2C_CR2(i2c) =
+        (addr << 1) |
+        (len << I2C_CR2_NBYTES_SHIFT) |
+        I2C_CR2_START |
+        I2C_CR2_AUTOEND; /* STOP automatically */
+
+    return 0;
+}
+
+static int i2c_write_byte(uint32_t i2c, uint8_t byte)
+{
+    uint32_t timeout = I2C_TIMEOUT;
+
+    while (!(I2C_ISR(i2c) & I2C_ISR_TXIS))
+        if (--timeout == 0) return -1;
+
+    I2C_TXDR(i2c) = byte;
+    return 0;
+}
+
+static int i2c_restart_read(uint32_t i2c, uint8_t addr, uint8_t len)
+{
+    uint32_t timeout = I2C_TIMEOUT;
+
+    /* Configure read transfer */
+    I2C_CR2(i2c) =
+        (addr << 1) |
+        I2C_CR2_RD_WRN |
+        (len << I2C_CR2_NBYTES_SHIFT) |
+        I2C_CR2_START |
+        I2C_CR2_AUTOEND;
+
+    return 0;
+}
+
+static int i2c_read_byte(uint32_t i2c, uint8_t *byte)
+{
+    uint32_t timeout = I2C_TIMEOUT;
+
+    while (!(I2C_ISR(i2c) & I2C_ISR_RXNE))
+        if (--timeout == 0) return -1;
+
+    *byte = I2C_RXDR(i2c);
+    return 0;
+}
+
+int fusb302_read_reg_ll(uint8_t reg, uint8_t *val)
+{
+    if (i2c_start_write(I2C1, FUSB302_ADDR, 1))
+        return -1;
+
+    if (i2c_write_byte(I2C1, reg))
+        return -1;
+
+    if (i2c_restart_read(I2C1, FUSB302_ADDR, 1))
+        return -1;
+
+    if (i2c_read_byte(I2C1, val))
+        return -1;
+
+    return 0;
 }
 
 static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size)
@@ -831,22 +907,75 @@ static int fusb_check_cc_voltage(void)
     return cc_mvolt;
 }
 
-static int fusb_get_msg(uint32_t *payload, int *header)
+/* Parse header bytes for the size of packet */
+static int get_num_bytes(uint16_t header)
+{
+	int rv;
+
+	/* Grab the Number of Data Objects field.*/
+	rv = PD_HEADER_NUM_DATA_OBJECTS(header);
+
+	/* Multiply by four to go from 32-bit words -> bytes */
+	rv *= 4;
+
+	/* Plus 2 for header */
+	rv += 2;
+
+	return rv;
+}
+
+int fusb302_tcpm_get_message(uint32_t *payload, int *head)
 {
     uint8_t buf[32];
-    int rv, len;
+    int len;
+    int i;
 
-    if (fusb_rx_empty()) {
+    /* FIFO empty? Nothing to do */
+    if (fusb_rx_empty())
         return -1;
-    }
 
-    // read until fifo empty
     do {
-        // write register address
-        buf[0] = FUSB302_REG_FIFOS;
-        rv = fusb_xfer(buf, 1, 0, 0);
-        
-    }
+        /* START + WRITE FIFO register address */
+        if (i2c_start_write(I2C1, FUSB302_ADDR, 1))
+            return -1;
+
+        if (i2c_write_byte(I2C1, FUSB302_REG_FIFOS))
+            return -1;
+
+        /* RESTART + READ token + header (3 bytes) */
+        if (i2c_restart_read(I2C1, FUSB302_ADDR, 3))
+            return -1;
+
+        for (i = 0; i < 3; i++)
+            if (i2c_read_byte(I2C1, &buf[i]))
+                return -1;
+
+        /* Parse PD header */
+        *head  = buf[1];
+        *head |= ((uint16_t)buf[2] << 8);
+
+        /* Payload length = total bytes − header */
+        len = get_num_bytes(*head) - 2;
+
+        /* Continue reading payload + CRC (no STOP yet) */
+        if (i2c_restart_read(I2C1, FUSB302_ADDR, len + 4))
+            return -1;
+
+        for (i = 0; i < len + 4; i++)
+            if (i2c_read_byte(I2C1, &buf[i]))
+                return -1;
+
+        /* STOP happens automatically via AUTOEND */
+
+    } while (PACKET_IS_GOOD_CRC(*head) &&
+             !fusb_rx_empty());
+
+    /* Drop GoodCRC packets */
+    if (PACKET_IS_GOOD_CRC(*head))
+        return -1;
+
+    memcpy(payload, buf, len);
+    return 0;
 }
 
 // function to print status info for debugging
