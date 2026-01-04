@@ -354,11 +354,11 @@ bool read_pd_message(pd_msg_t *pd)
     uint8_t tok;
 
     fusb_read_fifo(&tok, 1);
-    if ((tok & 0xE0) != FUSB302_RX_TKN_SOP)
+    if ((tok & 0xE0) != FUSB302_TKN_SOP1)
         return false;
 
     fusb_read_fifo(&tok, 1);
-    if ((tok & 0xE0) != FUSB302_RX_TKN_PACKSYM)
+    if ((tok & 0xE0) != FUSB302_TKN_PACKSYM)
         return false;
 
     uint8_t hdr[2];
@@ -375,7 +375,7 @@ bool read_pd_message(pd_msg_t *pd)
 
     do {
         fusb_read_fifo(&tok, 1);
-    } while ((tok & 0xD0) != FUSB302_RX_TKN_EOP);
+    } while ((tok & 0xD0) != FUSB302_TKN_EOP);
 
     log_first_pd_timing();
     return true;

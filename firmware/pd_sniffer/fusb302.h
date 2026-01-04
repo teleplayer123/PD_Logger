@@ -280,25 +280,17 @@
 /* -----------------------------------------------------------
  * Tokens for FIFOS register
  * ----------------------------------------------------------- */
-enum fusb302_txfifo_tokens {
-    FUSB302_TX_TKN_TXON = 0xA1,
-    FUSB302_TX_TKN_SOP1 = 0x12,
-    FUSB302_TX_TKN_SOP2 = 0x13,
-    FUSB302_TX_TKN_SOP3 = 0x1B,
-    FUSB302_TX_TKN_RESET1 = 0x15,
-    FUSB302_TX_TKN_RESET2 = 0x16,
-    FUSB302_TX_TKN_PACKSYM = 0x80,
-    FUSB302_TX_TKN_JAMCRC = 0xFF,
-    FUSB302_TX_TKN_EOP = 0x14,
-    FUSB302_TX_TKN_TXOFF = 0xFE,
-};
-
-enum fusb302_rxfifo_tokens {
-    FUSB302_RX_TKN_SOP = 0xE0,
-    FUSB302_RX_TKN_SOP1 = 0xC0,
-    FUSB302_RX_TKN_SOP2 = 0xA0,
-    FUSB302_RX_TKN_PACKSYM = 0x80,
-    FUSB302_RX_TKN_EOP = 0xD0,
+enum fusb302_fifo_tokens {
+    FUSB302_TKN_TXON = 0xA1,
+    FUSB302_TKN_SOP1 = 0x12,
+    FUSB302_TKN_SOP2 = 0x13,
+    FUSB302_TKN_SOP3 = 0x1B,
+    FUSB302_TKN_RESET1 = 0x15,
+    FUSB302_TKN_RESET2 = 0x16,
+    FUSB302_TKN_PACKSYM = 0x80,
+    FUSB302_TKN_JAMCRC = 0xFF,
+    FUSB302_TKN_EOP = 0x14,
+    FUSB302_TKN_TXOFF = 0xFE,
 };
 
 /* -----------------------------------------------------------

@@ -988,7 +988,7 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
             return rv;
 
         /* Validate RX token */
-        if (buf[0] != FUSB302_RX_TKN_SOP) {
+        if (buf[0] != FUSB302_TKN_SOP1) {
             /*
              * Unsupported packet type (GoodCRC, SOP', JAMCRC, etc)
              * Flush RX FIFO to recover cleanly
