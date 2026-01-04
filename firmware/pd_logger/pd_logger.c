@@ -1284,10 +1284,9 @@ int main(void)
                 debug_cli();
             } 
         }
-        if (!fusb_rx_empty()) {
+        if (!fusb_rx_empty())
             check_rx_messages();
-            dump_rx_messages();
-        }
+            
         poll();
         fusb_delay_ms(1000);
     }
