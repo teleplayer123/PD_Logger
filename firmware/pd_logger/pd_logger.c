@@ -967,69 +967,46 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
         return -1;
 
     do {
-        /*
-         * STEP 1: Point FIFO read pointer
-         * START, no STOP
-         */
-        rv = fusb_xfer(&fifo_reg, 1,
-                       NULL, 0,
-                       I2C_XFER_START);
+         // Point FIFO read pointer (START, no STOP)
+        rv = fusb_xfer(&fifo_reg, 1, NULL, 0, I2C_XFER_START);
         if (rv)
             return rv;
 
-        /*
-         * STEP 2: Read token + PD header (3 bytes total)
-         * RESTART, no STOP
-         */
-        rv = fusb_xfer(NULL, 0,
-                       buf, 3,
-                       I2C_XFER_START);
+        // Read token + PD header 3 bytes total (RESTART, no STOP)
+        rv = fusb_xfer(NULL, 0, buf, 3, I2C_XFER_START);
         if (rv)
             return rv;
 
-        /* Validate RX token */
+        // Validate RX token
         if (buf[0] != FUSB302_TKN_SOP1) {
-            /*
-             * Unsupported packet type (GoodCRC, SOP', JAMCRC, etc)
-             * Flush RX FIFO to recover cleanly
-             */
+            // Unsupported token, flush RX FIFO
             fusb_flush_rx_fifo();
             return -1;
         }
 
-        /* Parse PD header */
+        // Parse PD header
         *head  = buf[1];
         *head |= ((uint16_t)buf[2] << 8);
 
-        /* Determine payload length (bytes, excluding header) */
+        // Determine payload length (bytes, excluding header)
         len = get_num_bytes(*head) - 2;
         if (len < 0 || len > 28) {
             fusb_flush_rx_fifo();
             return -1;
         }
 
-        /*
-         * STEP 3: Read payload + CRC
-         * RESTART + STOP
-         */
-        rv = fusb_xfer(NULL, 0,
-                       buf, len + 4,
-                       I2C_XFER_STOP);
+        // Read payload + CRC (RESTART + STOP)
+        rv = fusb_xfer(NULL, 0, buf, len + 4, I2C_XFER_STOP);
         if (rv)
             return rv;
 
-        /*
-         * Loop again if this was a GoodCRC
-         * and FIFO still contains more packets
-         */
-    } while (PACKET_IS_GOOD_CRC(*head) &&
-             !fusb_rx_empty());
+    } while (PACKET_IS_GOOD_CRC(*head) && !fusb_rx_empty());
 
-    /* Drop GoodCRC packets */
+    // Drop GoodCRC packets
     if (PACKET_IS_GOOD_CRC(*head))
         return -1;
 
-    /* Copy payload only (exclude CRC) */
+    // Payload excluding CRC
     memcpy(payload, buf, len);
     return 0;
 }
