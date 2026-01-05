@@ -1012,33 +1012,6 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
     return 0;
 }
 
-// static void fusb_send_message(uint16_t head, uint32_t *payload)
-// {
-//     uint8_t buf[32];
-//     uint8_t fifo_reg = FUSB302_REG_FIFOS;
-//     int rv;
-//     int len = get_num_bytes(head);
-
-//     // Build packet in buffer
-//     buf[0] = FUSB302_TKN_SOP1;
-//     buf[1] = head & 0xFF;
-//     buf[2] = (head >> 8) & 0xFF;
-//     for (int i = 0; i < (len - 2) / 4; i++) {
-//         buf[3 + i * 4]     = payload[i] & 0xFF;
-//         buf[3 + i * 4 + 1] = (payload[i] >> 8) & 0xFF;
-//         buf[3 + i * 4 + 2] = (payload[i] >> 16) & 0xFF;
-//         buf[3 + i * 4 + 3] = (payload[i] >> 24) & 0xFF;
-//     }
-//     // Write to FIFO (START, no STOP)
-//     rv = fusb_xfer(&fifo_reg, 1, NULL, 0, I2C_XFER_START);
-//     if (rv)
-//         return;
-//     // Write packet to FIFO (RESTART + STOP)
-//     rv = fusb_xfer(NULL, 0, buf, len + 3, I2C_XFER_START | I2C_XFER_STOP);
-//     if (rv)
-//         return;
-// }
-
 static int fusb_send_message(uint16_t header, const uint32_t *data, uint8_t *buf, int buf_pos)
 {
     int rv;
