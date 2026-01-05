@@ -21,7 +21,7 @@
 
 #define I2C_TIMEOUT 100000
 
-#define PACKET_IS_GOOD_CRC(head) (PD_HEADER_MESSAGE_TYPE(head) == PD_CTRL_GOOD_CRC && PD_HEADER_NUM_DATA_OBJECTS(head) == 0)
+#define PACKET_IS_GOOD_CRC(head) (PD_HEADER_TYPE(head) == PD_CTRL_GOOD_CRC && PD_HEADER_CNT(head) == 0)
 #define I2C_XFER_START BIT(0)
 #define I2C_XFER_STOP BIT(1)
 
@@ -945,7 +945,7 @@ static int get_num_bytes(uint16_t header)
 	int rv;
 
 	/* Grab the Number of Data Objects field.*/
-	rv = PD_HEADER_NUM_DATA_OBJECTS(header);
+	rv = PD_HEADER_CNT(header);
 
 	/* Multiply by four to go from 32-bit words -> bytes */
 	rv *= 4;
@@ -1056,6 +1056,12 @@ static int fusb_send_message(uint16_t header, const uint32_t *data, uint8_t *buf
     return rv;
 }
 
+/*
+* @brief Transmit a Type-C message
+* @param type: The type of Type-C message to send (SOP, SOP′, SOP″, Hard Reset, etc.)
+* @param header: 16 bit header The PD header for the message
+* @param data: Pointer to the data payload up to 7 × 32-bit PD Data Objects (or NULL for control messages)
+*/
 static int fusb_transmit(enum tcpc_message_type type, uint16_t header, const uint32_t *data)
 {
 	/*

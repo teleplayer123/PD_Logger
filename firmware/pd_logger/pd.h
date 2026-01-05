@@ -8,11 +8,18 @@
 // Maximum length of a standard PD Data Message (Header + 7 PDOs + CRC)
 #define MAX_PD_PACKET_SIZE (2 + 7*4 + 4) // Header + 7 Data Objects + CRC = 34 bytes
 
-// Utility to extract Message Type and Number of Data Objects from the 16-bit Header
-#define PD_HEADER_MESSAGE_TYPE(h) ((h) & 0x1F) // Bits 4:0
-#define PD_HEADER_NUM_DATA_OBJECTS(h) (((h) >> 12) & 0x07) // Bits 14:12
-#define PD_HEADER_EXTENDED(h) (((h) >> 15) & 0x01) // Bit 15
+// Build PD Header from its components
+#define PD_HEADER(type, prole, drole, id, cnt, rev, ext) \
+	((type) | ((rev) << 6) | \
+	((drole) << 5) | ((prole) << 8) | \
+	((id) << 9) | ((cnt) << 12) | ((ext) << 15))
 
+// Process PD headers
+#define PD_HEADER_EXT(h)  (((h) >> 15) & 1)
+#define PD_HEADER_CNT(h)  (((h) >> 12) & 7)
+#define PD_HEADER_TYPE(h) ((h) & 0xF)
+#define PD_HEADER_ID(h)   (((h) >> 9) & 7)
+#define PD_HEADER_REV(h)  (((h) >> 6) & 3)
 
 #define PD_SRC_DEF_MV               1600
 #define PD_SRC_DEF_RD_MV            200
