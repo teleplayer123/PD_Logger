@@ -962,7 +962,7 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
     int rv;
     int len;
 
-    /* Nothing to read */
+    // Nothing to read
     if (fusb_rx_empty())
         return -1;
 
