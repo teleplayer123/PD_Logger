@@ -267,78 +267,10 @@
 #define FUSB302_INT_COLLISION       (1 << 1)
 #define FUSB302_INT_BC_LVL          (1 << 0)
 
-/* -----------------------------------------------------------
- * PD Macros/Defines
- * ----------------------------------------------------------- */
-
 // Maximum size of the RX FIFO
 #define FUSB302_RX_FIFO_SIZE 80
 
-// Maximum length of a standard PD Data Message (Header + 7 PDOs + CRC)
-#define MAX_PD_PACKET_SIZE (2 + 7*4 + 4) // Header + 7 Data Objects + CRC = 34 bytes
-
-// Utility to extract Message Type and Number of Data Objects from the 16-bit Header
-#define PD_HEADER_MESSAGE_TYPE(h) ((h) & 0x1F) // Bits 4:0
-#define PD_HEADER_NUM_DATA_OBJECTS(h) (((h) >> 12) & 0x07) // Bits 14:12
-#define PD_HEADER_EXTENDED(h) (((h) >> 15) & 0x01) // Bit 15
-
 #define BIT(x) (1 << (x))
-#define PD_SRC_DEF_MV               1600
-#define PD_SRC_DEF_RD_MV            200
-#define PD_RETRY_COUNT              3
-
-/* Control Message type - USB-PD Spec Rev 3.0, Ver 1.1, Table 6-5 */
-enum pd_ctrl_msg_type {
-	PD_CTRL_INVALID = 0, /* 0 Reserved - DO NOT PUT IN MESSAGES */
-	PD_CTRL_GOOD_CRC = 1,
-	PD_CTRL_GOTO_MIN = 2,
-	PD_CTRL_ACCEPT = 3,
-	PD_CTRL_REJECT = 4,
-	PD_CTRL_PING = 5,
-	PD_CTRL_PS_RDY = 6,
-	PD_CTRL_GET_SOURCE_CAP = 7,
-	PD_CTRL_GET_SINK_CAP = 8,
-	PD_CTRL_DR_SWAP = 9,
-	PD_CTRL_PR_SWAP = 10,
-	PD_CTRL_VCONN_SWAP = 11,
-	PD_CTRL_WAIT = 12,
-	PD_CTRL_SOFT_RESET = 13,
-	/* Used for REV 3.0 */
-	PD_CTRL_DATA_RESET = 14,
-	PD_CTRL_DATA_RESET_COMPLETE = 15,
-	PD_CTRL_NOT_SUPPORTED = 16,
-	PD_CTRL_GET_SOURCE_CAP_EXT = 17,
-	PD_CTRL_GET_STATUS = 18,
-	PD_CTRL_FR_SWAP = 19,
-	PD_CTRL_GET_PPS_STATUS = 20,
-	PD_CTRL_GET_COUNTRY_CODES = 21,
-	PD_CTRL_GET_SINK_CAP_EXT = 22,
-	/* Used for REV 3.1 */
-	PD_CTRL_GET_SOURCE_INFO = 23,
-	PD_CTRL_GET_REVISION = 24,
-	/* 25-31 Reserved */
-};
-
-enum tcpc_cc_voltage_status {
-	TYPEC_CC_VOLT_OPEN = 0,
-	TYPEC_CC_VOLT_RA = 1,
-	TYPEC_CC_VOLT_RD = 2,
-	TYPEC_CC_VOLT_SNK_DEF = 5,
-	TYPEC_CC_VOLT_SNK_1_5 = 6,
-	TYPEC_CC_VOLT_SNK_3_0 = 7,
-};
-
-enum tcpc_cc_pull {
-	TYPEC_CC_RA = 0,
-	TYPEC_CC_RP = 1,
-	TYPEC_CC_RD = 2,
-	TYPEC_CC_OPEN = 3,
-};
-
-typedef struct {
-    uint16_t header;
-    uint32_t obj[7];
-} pd_msg_t;
 
 /* -----------------------------------------------------------
  * Tokens for FIFOS register

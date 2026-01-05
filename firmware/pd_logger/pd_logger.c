@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fusb302.h"
+#include "pd.h"
 
 /* ------------------------------------------------------------
  * Globals
@@ -246,7 +247,7 @@ static int i2c_start_write(uint32_t i2c, uint8_t addr, uint8_t nbytes, int flags
     uint32_t timeout = 100000;
     uint32_t cr2 = 0;
 
-    /* Wait for bus free only if START requested */
+    // Wait for bus free only if START requested
     if (flags & I2C_XFER_START) {
         while (I2C_ISR(i2c) & I2C_ISR_BUSY)
             if (--timeout == 0)
@@ -1011,6 +1012,153 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
     return 0;
 }
 
+// static void fusb_send_message(uint16_t head, uint32_t *payload)
+// {
+//     uint8_t buf[32];
+//     uint8_t fifo_reg = FUSB302_REG_FIFOS;
+//     int rv;
+//     int len = get_num_bytes(head);
+
+//     // Build packet in buffer
+//     buf[0] = FUSB302_TKN_SOP1;
+//     buf[1] = head & 0xFF;
+//     buf[2] = (head >> 8) & 0xFF;
+//     for (int i = 0; i < (len - 2) / 4; i++) {
+//         buf[3 + i * 4]     = payload[i] & 0xFF;
+//         buf[3 + i * 4 + 1] = (payload[i] >> 8) & 0xFF;
+//         buf[3 + i * 4 + 2] = (payload[i] >> 16) & 0xFF;
+//         buf[3 + i * 4 + 3] = (payload[i] >> 24) & 0xFF;
+//     }
+//     // Write to FIFO (START, no STOP)
+//     rv = fusb_xfer(&fifo_reg, 1, NULL, 0, I2C_XFER_START);
+//     if (rv)
+//         return;
+//     // Write packet to FIFO (RESTART + STOP)
+//     rv = fusb_xfer(NULL, 0, buf, len + 3, I2C_XFER_START | I2C_XFER_STOP);
+//     if (rv)
+//         return;
+// }
+
+static int fusb_send_message(uint16_t header, const uint32_t *data, uint8_t *buf, int buf_pos)
+{
+    int rv;
+    int reg;
+    int len;
+
+    len = get_num_bytes(header);
+
+    // packsym tells the TXFIFO that the next X bytes are payload
+    reg = FUSB302_TKN_PACKSYM;
+    reg |= (len & 0x1F);
+    buf[buf_pos++] = reg;
+
+    // put in the header (2 bytes)
+    reg = header;
+    buf[buf_pos++] = reg & 0xFF;
+    reg >>= 8;
+    buf[buf_pos++] = reg & 0xFF;
+
+    // subtract from length the two header bytes
+    len -= 2;
+    // put in the data payload
+    memcpy(&buf[buf_pos], data, len);
+    buf_pos += len;
+
+    // put in the CRC
+    buf[buf_pos++] = FUSB302_TKN_JAMCRC;
+
+    // put in EOP
+    buf[buf_pos++] = FUSB302_TKN_EOP;
+
+    // Turn transmitter off after sending message
+    buf[buf_pos++] = FUSB302_TKN_TXOFF;
+
+    // Start transmission
+    reg = FUSB302_TKN_TXON;
+    buf[buf_pos++] = FUSB302_TKN_TXON;
+
+    // burst write
+    rv = fusb_xfer(buf, buf_pos, 0, 0, I2C_XFER_START | I2C_XFER_STOP);
+
+    return rv;
+}
+
+static int fusb_transmit(enum tcpc_message_type type, uint16_t header, const uint32_t *data)
+{
+	/*
+     * Packet structure (40 bytes):
+	 * 1: FIFO register address
+	 * 4: SOP* tokens
+	 * 1: Token that signifies "next X bytes are not tokens"
+	 * 30: 2 for header and up to 7*4 = 28 for rest of message
+	 * 1: "Insert CRC" Token
+	 * 1: EOP Token
+	 * 1: "Turn transmitter off" token
+	 * 1: "Start Transmission" Command
+	 */
+    uint8_t buf[40];
+    int buf_pos = 0;
+    int reg;
+
+    // Flush TX FIFO
+    fusb_flush_tx_fifo();
+
+    switch (type) {
+        case TYPEC_MESSAGE_TYPE_SOP:
+            // put fifo register at start
+            buf[buf_pos++] = FUSB302_REG_FIFOS;
+            // put ordered sop token into tx fifo
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP2;
+            return fusb_send_message(header, data, buf, buf_pos);
+        case TYPEC_MESSAGE_TYPE_SOP_PRIME:
+            // put fifo register at start
+            buf[buf_pos++] = FUSB302_REG_FIFOS;
+            // put ordered sop' token into tx fifo
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP3;
+            buf[buf_pos++] = FUSB302_TKN_SOP3;
+            return fusb_send_message(header, data, buf, buf_pos);
+        case TYPEC_MESSAGE_TYPE_SOP_DOUBLE_PRIME:
+            // put fifo register at start
+            buf[buf_pos++] = FUSB302_REG_FIFOS;
+            // put ordered sop" token into tx fifo
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP3;
+            buf[buf_pos++] = FUSB302_TKN_SOP1;
+            buf[buf_pos++] = FUSB302_TKN_SOP3;
+            return fusb_send_message(header, data, buf, buf_pos);
+        case TYPEC_MESSAGE_TYPE_HARD_RESET:
+            // set send_hard_reset bit in control3
+            reg = fusb_read(FUSB302_REG_CONTROL3);
+            reg |= FUSB302_CTL3_SEND_HARD_RESET;
+            fusb_write(FUSB302_REG_CONTROL3, reg);
+            break;
+        case TYPEC_MESSAGE_TYPE_BIST_MODE_2:
+            // set bist_mode_2 bit in control1
+            reg = fusb_read(FUSB302_REG_CONTROL1);
+            reg |= FUSB302_CTL1_BIST_MODE2;
+            fusb_write(FUSB302_REG_CONTROL1, reg);
+            // set start tx bit in control0
+            reg = fusb_read(FUSB302_REG_CONTROL0);
+            reg |= FUSB302_CTL0_TX_START;
+            fusb_write(FUSB302_REG_CONTROL0, reg);
+            fusb_delay_ms(50);
+            // clear bist_mode_2 bit in control1
+            reg = fusb_read(FUSB302_REG_CONTROL1);
+            reg &= ~FUSB302_CTL1_BIST_MODE2;
+            fusb_write(FUSB302_REG_CONTROL1, reg);
+            break;
+        default:
+            return -1;
+    }
+
+    return 0;
+}
+
 static void check_rx_messages(void)
 {
     uint16_t head;
@@ -1033,7 +1181,8 @@ static void dump_rx_messages(void)
     for (int i = 0; i <= rx_messages_idx; i++) {
         usart_printf("---- RX Message %d ----\r\n", i);
         usart_printf("Header=0x%04X\r\n", rx_messages[i].head);
-        usart_printf("Payload: 0x%08X\r\n", rx_messages[i].payload);
+        for (int j = 0; j < 7; j++)
+            usart_printf("Payload[%d]: 0x%08X\r\n", j, rx_messages[i].payload[j]);
         usart_printf("-----------------------\r\n");
     }
 }
