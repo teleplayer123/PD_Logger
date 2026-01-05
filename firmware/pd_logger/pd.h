@@ -17,7 +17,7 @@
 // Process PD headers
 #define PD_HEADER_EXT(h)  (((h) >> 15) & 1)
 #define PD_HEADER_CNT(h)  (((h) >> 12) & 7)
-#define PD_HEADER_TYPE(h) ((h) & 0xF)
+#define PD_HEADER_TYPE(h) ((h) & 0x1F)
 #define PD_HEADER_ID(h)   (((h) >> 9) & 7)
 #define PD_HEADER_REV(h)  (((h) >> 6) & 3)
 
