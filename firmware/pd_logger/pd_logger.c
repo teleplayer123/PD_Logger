@@ -1031,8 +1031,13 @@ static int fusb_send_message(uint16_t header, const uint32_t *data, uint8_t *buf
     reg >>= 8;
     buf[buf_pos++] = reg & 0xFF;
 
-    // subtract from length the two header bytes
-    len -= 2;
+    if (data == NULL) {
+        // no data payload
+        len = 0;
+    } else {
+        // data payload length in bytes
+        len -= 2;
+    }
     // put in the data payload
     memcpy(&buf[buf_pos], data, len);
     buf_pos += len;
