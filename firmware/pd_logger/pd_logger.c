@@ -506,9 +506,6 @@ static void fusb_setup(void)
     // Reset FUSB302
     fusb_reset();
 
-    // Power all
-    fusb_power_all();
-
     // CONTROL3 Turn on retries and set number of retries
     reg = fusb_read(FUSB302_REG_CONTROL3);
     reg |= (FUSB302_CTL3_AUTO_RETRY | FUSB302_CTL3_NRETRIES_MASK);
@@ -548,6 +545,9 @@ static void fusb_setup(void)
     state.vconn_enabled = 0;
     state.cc_polarity = 0;
     state.attached = 0;
+
+    // Power all
+    fusb_power_all();
 }
 
 static void fusb_check_status_regs(void)
@@ -1386,11 +1386,17 @@ static int handle_command(char *line) {
         uint16_t header = PD_HEADER(type, prole, drole, id, cnt, rev, ext);
         usart_printf("Sending message with header: 0x%04X\r\n", header);
         fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, NULL);
+    } else if (line[0] == 'e') {
+        fusb_rx_enable(true);
+        usart_printf("RX Enabled\r\n");
+    } else if (line[0] == 'd') {
+        fusb_rx_enable(false);
+        usart_printf("RX Disabled\r\n");
     } else if (line[0] == 'q') {
         // return 1 to tell debug_cli to break loop and return to logging
         return 1;
     } else {
-        usart_printf("Commands:\r\n  Read from register:\t\tr <reg>\r\n  Write to register:\t\tw <reg> <val>\r\n  Read bits in register:\tt <reg> \r\n  Status:\t\t\ts \r\n  Check rx messages:\t\tc  \r\n  Send SOP message:\t\tx <type> <prole> <drole> <id> <cnt> <rev> <ext>  \r\n  Quit:\t\t\t\tq  \r\n");
+        usart_printf("Commands:\r\n  Read from register:\t\tr <reg>\r\n  Write to register:\t\tw <reg> <val>\r\n  Read bits in register:\tt <reg> \r\n  Status:\t\t\ts \r\n  Check Rx messages:\t\tc  \r\n  Send SOP message:\t\tx <type> <prole> <drole> <id> <cnt> <rev> <ext>  \r\n  Enable Rx:\t\te  \r\n  Disable Rx:\t\td  \r\nQuit:\t\t\t\tq  \r\n");
     }
     return 0;
 }
