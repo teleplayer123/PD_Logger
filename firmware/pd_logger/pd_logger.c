@@ -1102,7 +1102,7 @@ static int fusb_transmit(enum tcpc_message_type type, uint16_t header, const uin
         case TYPEC_MESSAGE_TYPE_HARD_RESET:
             // set send_hard_reset bit in control3
             reg = fusb_read(FUSB302_REG_CONTROL3);
-            reg |= FUSB302_CTL3_SEND_HARD_RESET;
+            reg |= FUSB302_CTL3_SEND_HARDRESET;
             fusb_write(FUSB302_REG_CONTROL3, reg);
             break;
         case TYPEC_MESSAGE_TYPE_BIST_MODE_2:

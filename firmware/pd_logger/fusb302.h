@@ -126,7 +126,7 @@
 /* -----------------------------------------------------------
  * CONTROL3 (0x09)
  * ----------------------------------------------------------- */
-#define FUSB302_CTL3_SEND_HARD_RESET (1 << 6)
+#define FUSB302_CTL3_SEND_HARDRESET (1 << 6)
 #define FUSB302_CTL3_BIST_TMODE     (1 << 5)
 #define FUSB302_CTL3_AUTO_HARDRESET (1 << 4)
 #define FUSB302_CTL3_AUTO_SOFTRESET (1 << 3)
