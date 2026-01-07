@@ -1156,12 +1156,14 @@ static void dump_rx_messages(void)
 }
 
 // function to print status info for debugging
-static void fusb_get_status(void)
+static void fusb_get_status(bool verbose)
 {
-    fusb_check_status_regs();
-    fusb_check_switches_regs();
-    fusb_check_control_regs();
-    fusb_check_mask_regs();
+    if (verbose) {
+        fusb_check_status_regs();
+        fusb_check_switches_regs();
+        fusb_check_control_regs();
+        fusb_check_mask_regs();
+    }
     usart_printf("INT pin=%02X\r\n", gpio_get(GPIOB, GPIO8) ? 1 : 0);
     fusb_current_state();
     int vbus_voltage = fusb_measure_vbus_voltage();
@@ -1302,7 +1304,7 @@ static void poll(void)
             int polarity = fusb_check_cc_pin();
             int cc_n = polarity ? 2 : 1;
             usart_printf("CC line on CC%d\r\n", cc_n);
-            fusb_get_status();
+            fusb_get_status(false);
             // enable rx
             fusb_rx_enable(true);
         } else {
@@ -1345,7 +1347,7 @@ static int handle_command(char *line) {
         uint8_t val = fusb_read(reg);
         print_byte_as_bits(val, reg);
     } else if (line[0] == 's') {
-        fusb_get_status();
+        fusb_get_status(true);
         check_rx_buffer();
     } else if (line[0] == 'c') {
         dump_rx_messages();

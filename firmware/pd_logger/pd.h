@@ -43,6 +43,11 @@
 #define PD_DATA_ROLE_UFP 0
 #define PD_DATA_ROLE_DFP 1
 
+// Specification Revision
+#define PD_SPEC_REV1  0 // deprecated
+#define PD_SPEC_REV2  1
+#define PD_SPEC_REV3  2
+
 /* Control Message type - USB-PD Spec Rev 3.2, Ver 1.1, Table 6-5 */
 enum pd_ctrl_msg_type {
 	PD_CTRL_INVALID = 0, // 0 Reserved - DO NOT PUT IN MESSAGES
