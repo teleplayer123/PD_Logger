@@ -480,22 +480,6 @@ static void fusb_current_state(void)
     usart_printf("---- End State ----\r\n");
 }
 
-static void fusb_init_sink(void)
-{
-    // CONTROL1 Enable reception of all SOP packets
-    fusb_write(FUSB302_REG_CONTROL1, FUSB302_CTL1_ENSOP1 | FUSB302_CTL1_ENSOP2 | FUSB302_CTL1_ENSOP1DB | FUSB302_CTL1_ENSOP2DB);
-
-    // SWITCHES1 Enable Auto-CRC, Set sink role
-    fusb_write(FUSB302_REG_SWITCHES1, FUSB302_SW1_AUTO_GCRC | FUSB302_SW1_SPECREV1 | FUSB302_SW1_SPECREV0);
-
-    // CONTROL2 Toggle to detect CC and establish UFP (Sink)
-    fusb_write(FUSB302_REG_CONTROL2, FUSB302_CTL2_MODE_UFP | FUSB302_CTL2_WAKE_EN | FUSB302_CTL2_TOGGLE);
-
-    state.pulling_up = 0; // Sink mode, pulling down
-    
-    usart_printf("FUSB302 initialized in Sink mode.\n");
-}
-
 static void fusb_setup(void)
 {
     uint8_t reg;
@@ -1319,6 +1303,8 @@ static void poll(void)
             int cc_n = polarity ? 2 : 1;
             usart_printf("CC line on CC%d\r\n", cc_n);
             fusb_get_status();
+            // enable rx
+            fusb_rx_enable(true);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
@@ -1326,6 +1312,8 @@ static void poll(void)
             // if CC voltage is 0, assume device is not attached (some edge cases will be missed)
             if (!still_attached) {
                 usart_printf("Dettach detected\r\n");
+                // disable rx
+                fusb_rx_enable(false);
                 // set default state
                 state.attached = 0;
                 state.cc_polarity = 0;
