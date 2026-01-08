@@ -457,18 +457,16 @@ static void fusb_sop_prime_db_enable(bool enable)
     fusb_write(FUSB302_REG_CONTROL1, reg);
 }
 
-static void fusb_set_mdac_vnc(uint8_t mv)
+// hard coded rp to default usb (pull up to 1.5A)
+static void fusb_set_rp_default(void)
 {
-    uint8_t mdac = FUSB302_MEAS_MDAC_MV(mv);
-    fusb_write(FUSB302_REG_MEASURE, (fusb_read(FUSB302_REG_MEASURE) & ~FUSB302_MEAS_MDAC_MASK) | mdac);
-    state.mdac_vnc = mdac;
-}
-
-static void fusb_set_mdac_rd(uint8_t mv)
-{
-    uint8_t mdac = FUSB302_MEAS_MDAC_MV(mv);
-    fusb_write(FUSB302_REG_MEASURE, (fusb_read(FUSB302_REG_MEASURE) & ~FUSB302_MEAS_MDAC_MASK) | mdac);
-    state.mdac_rd = mdac;
+    uint8_t reg;
+    reg = fusb_read(FUSB302_REG_CONTROL0);
+    reg &= ~FUSB302_CTL0_HOST_CUR_MASK;
+    reg |= FUSB302_CTL0_HOST_CUR_USB;
+    state.mdac_vnc = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_MV);
+    state.mdac_rd = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_RD_MV);
+    fusb_write(FUSB302_REG_CONTROL0, reg);
 }
 
 // Print current state struct values for debugging
