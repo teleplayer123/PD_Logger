@@ -359,14 +359,114 @@ static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size,
     return 0;
 }
 
-/* ------------------------------------------------------------
- * FUSB302 functions
- * ------------------------------------------------------------ */
-
 static uint8_t fusb_rx_empty(void) 
 {
     return fusb_read(FUSB302_REG_STATUS1) & FUSB302_STATUS1_RX_EMPTY;
 }
+
+/* ------------------------------------------------------------
+ * FUSB302 debug functions
+ * ------------------------------------------------------------ */
+
+static void fusb_check_status_regs(void)
+{
+    uint8_t reg;
+    // Read and print status0 bits
+    usart_printf("---- STATUS0 ----\r\n");
+    reg = fusb_read(FUSB302_REG_STATUS0);
+    dump_bits(reg, fusb302_status0_bits);
+    usart_printf("\r\n");
+    // Read and print status1 bits
+    usart_printf("---- STATUS1 ----\r\n");
+    reg = fusb_read(FUSB302_REG_STATUS1);
+    dump_bits(reg, fusb302_status1_bits);
+    usart_printf("\r\n");
+    // Read and print status0a bits
+    usart_printf("---- STATUS0A ----\r\n");
+    reg = fusb_read(FUSB302_REG_STATUS0A);
+    dump_bits(reg, fusb302_status0a_bits);
+    usart_printf("\r\n");
+    // Read and print status1a bits
+    usart_printf("---- STATUS1A ----\r\n");
+    reg = fusb_read(FUSB302_REG_STATUS1A);
+    dump_bits(reg, fusb302_status1a_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_control_regs(void)
+{
+    uint8_t reg;
+    // Read and print control0 bits
+    usart_printf("---- CONTROL0 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL0);
+    dump_bits(reg, fusb302_control0_bits);
+    usart_printf("\r\n");
+    // Read and print control1 bits
+    usart_printf("---- CONTROL1 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL1);
+    dump_bits(reg, fusb302_control1_bits);
+    usart_printf("\r\n");
+    // Read and print control2 bits
+    usart_printf("---- CONTROL2 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL2);
+    dump_bits(reg, fusb302_control2_bits);
+    usart_printf("\r\n");
+    // Read and print control3 bits
+    usart_printf("---- CONTROL3 ----\r\n");
+    reg = fusb_read(FUSB302_REG_CONTROL3);
+    dump_bits(reg, fusb302_control3_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_switches_regs(void)
+{
+    uint8_t reg;
+    // Read and print switches0 bits
+    usart_printf("---- SWITCHES0 ----\r\n");
+    reg = fusb_read(FUSB302_REG_SWITCHES0);
+    dump_bits(reg, fusb302_switches0_bits);
+    usart_printf("\r\n");
+    // Read and print switches1 bits
+    usart_printf("---- SWITCHES1 ----\r\n");
+    reg = fusb_read(FUSB302_REG_SWITCHES1);
+    dump_bits(reg, fusb302_switches1_bits);
+    usart_printf("\r\n");
+}
+
+static void fusb_check_mask_regs(void)
+{
+    uint8_t reg;
+    // Read and print mask bits
+    usart_printf("---- MASK ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASK);
+    dump_bits(reg, fusb302_mask_bits);
+    usart_printf("\r\n");
+    // Read and print maskA bits
+    usart_printf("---- MASKA ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASKA);
+    dump_bits(reg, fusb302_maska_bits);
+    usart_printf("\r\n");
+    // Read and print maskB bits
+    usart_printf("---- MASKB ----\r\n");
+    reg = fusb_read(FUSB302_REG_MASKB);
+    dump_bits(reg, fusb302_maskb_bits);
+    usart_printf("\r\n");
+}
+
+static void check_rx_buffer(void)
+{
+    uint8_t buffer[80];
+    // dump fifo if not empty
+    if (!fusb_rx_empty()) {
+        fusb_read_fifo(buffer, 80);
+        hexdump(buffer, 80);
+    }
+}
+
+
+/* ------------------------------------------------------------
+ * FUSB302 functions
+ * ------------------------------------------------------------ */
 
 static void fusb_delay_ms(uint32_t ms)
 {
@@ -558,101 +658,6 @@ static void fusb_setup(void)
 
     // Power all
     fusb_power_all();
-}
-
-static void fusb_check_status_regs(void)
-{
-    uint8_t reg;
-    // Read and print status0 bits
-    usart_printf("---- STATUS0 ----\r\n");
-    reg = fusb_read(FUSB302_REG_STATUS0);
-    dump_bits(reg, fusb302_status0_bits);
-    usart_printf("\r\n");
-    // Read and print status1 bits
-    usart_printf("---- STATUS1 ----\r\n");
-    reg = fusb_read(FUSB302_REG_STATUS1);
-    dump_bits(reg, fusb302_status1_bits);
-    usart_printf("\r\n");
-    // Read and print status0a bits
-    usart_printf("---- STATUS0A ----\r\n");
-    reg = fusb_read(FUSB302_REG_STATUS0A);
-    dump_bits(reg, fusb302_status0a_bits);
-    usart_printf("\r\n");
-    // Read and print status1a bits
-    usart_printf("---- STATUS1A ----\r\n");
-    reg = fusb_read(FUSB302_REG_STATUS1A);
-    dump_bits(reg, fusb302_status1a_bits);
-    usart_printf("\r\n");
-}
-
-static void fusb_check_control_regs(void)
-{
-    uint8_t reg;
-    // Read and print control0 bits
-    usart_printf("---- CONTROL0 ----\r\n");
-    reg = fusb_read(FUSB302_REG_CONTROL0);
-    dump_bits(reg, fusb302_control0_bits);
-    usart_printf("\r\n");
-    // Read and print control1 bits
-    usart_printf("---- CONTROL1 ----\r\n");
-    reg = fusb_read(FUSB302_REG_CONTROL1);
-    dump_bits(reg, fusb302_control1_bits);
-    usart_printf("\r\n");
-    // Read and print control2 bits
-    usart_printf("---- CONTROL2 ----\r\n");
-    reg = fusb_read(FUSB302_REG_CONTROL2);
-    dump_bits(reg, fusb302_control2_bits);
-    usart_printf("\r\n");
-    // Read and print control3 bits
-    usart_printf("---- CONTROL3 ----\r\n");
-    reg = fusb_read(FUSB302_REG_CONTROL3);
-    dump_bits(reg, fusb302_control3_bits);
-    usart_printf("\r\n");
-}
-
-static void fusb_check_switches_regs(void)
-{
-    uint8_t reg;
-    // Read and print switches0 bits
-    usart_printf("---- SWITCHES0 ----\r\n");
-    reg = fusb_read(FUSB302_REG_SWITCHES0);
-    dump_bits(reg, fusb302_switches0_bits);
-    usart_printf("\r\n");
-    // Read and print switches1 bits
-    usart_printf("---- SWITCHES1 ----\r\n");
-    reg = fusb_read(FUSB302_REG_SWITCHES1);
-    dump_bits(reg, fusb302_switches1_bits);
-    usart_printf("\r\n");
-}
-
-static void fusb_check_mask_regs(void)
-{
-    uint8_t reg;
-    // Read and print mask bits
-    usart_printf("---- MASK ----\r\n");
-    reg = fusb_read(FUSB302_REG_MASK);
-    dump_bits(reg, fusb302_mask_bits);
-    usart_printf("\r\n");
-    // Read and print maskA bits
-    usart_printf("---- MASKA ----\r\n");
-    reg = fusb_read(FUSB302_REG_MASKA);
-    dump_bits(reg, fusb302_maska_bits);
-    usart_printf("\r\n");
-    // Read and print maskB bits
-    usart_printf("---- MASKB ----\r\n");
-    reg = fusb_read(FUSB302_REG_MASKB);
-    dump_bits(reg, fusb302_maskb_bits);
-    usart_printf("\r\n");
-}
-
-static void check_rx_buffer(void)
-{
-    uint8_t buffer[80];
-    // dump fifo if not empty
-    if (!fusb_rx_empty()) {
-        fusb_read_fifo(buffer, 80);
-        hexdump(buffer, 80);
-    }
 }
 
 static int convert_bc_lvl(int bc_lvl)
