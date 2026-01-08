@@ -322,16 +322,6 @@ static int i2c_read_byte(uint32_t i2c, uint8_t *val)
     return 0;
 }
 
-// static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size)
-// {
-//     i2c_transfer7(I2C1, FUSB302_ADDR, (uint8_t *)out, out_size, in, in_size);
-//     if (I2C_ISR(I2C1) & (I2C_ISR_NACKF | I2C_ISR_BERR | I2C_ISR_ARLO)) {
-//         i2c_clear_stop(I2C1);
-//         return -1;
-//     }
-//     return 0;
-// }
-
 static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size, int flags)
 {
     int i;
