@@ -58,6 +58,7 @@ static struct pd_rx_messages {
     uint32_t payload[7];
 } rx_messages[50];
 
+// counter for rx_messages index
 int rx_messages_idx = 0;
 
 /* ------------------------------------------------------------
@@ -809,6 +810,93 @@ static int fusb_check_cc_pin(void)
         ret = fusb_check_cc_pin_snk();
     }
     return ret;
+}
+
+static void fusb_set_cc(int pull)
+{
+    uint8_t reg;
+    switch (pull) {
+        case TYPEC_CC_RP:
+            // enable correct pull-up
+            reg = fusb_read(FUSB302_REG_SWITCHES0);
+            reg &= ~(FUSB302_SW0_PDWN1 | FUSB302_SW0_PDWN2 | FUSB302_SW0_PU_EN1 | FUSB302_SW0_PU_EN2 | FUSB302_SW0_VCONN_CC1 | FUSB302_SW0_VCONN_CC2);
+            reg |= (FUSB302_SW0_PU_EN1 | FUSB302_SW0_PU_EN2);
+            if (state.vconn_enabled) {
+                // enable vconn on opposite cc line
+                if (state.cc_polarity) {
+                    reg |= FUSB302_SW0_VCONN_CC1;
+                } else {
+                    reg |= FUSB302_SW0_VCONN_CC2;
+                }
+            }
+            fusb_write(FUSB302_REG_SWITCHES0, reg);
+            state.pulling_up = 1;
+            break;
+        case TYPEC_CC_RD:
+            // enable UFP
+            // turn off toggle
+            reg = fusb_read(FUSB302_REG_CONTROL2);
+            reg &= ~FUSB302_CTL2_TOGGLE;
+            fusb_write(FUSB302_REG_CONTROL2, reg);
+            // enable pull-downs and disable pull-ups
+            reg = fusb_read(FUSB302_REG_SWITCHES0);
+            reg &= ~(FUSB302_SW0_PU_EN1 | FUSB302_SW0_PU_EN2);
+            reg |= (FUSB302_SW0_PDWN1 | FUSB302_SW0_PDWN2);
+            fusb_write(FUSB302_REG_SWITCHES0, reg);
+            state.pulling_up = 0;
+            break;
+        case TYPEC_CC_OPEN:
+            // disable toggle
+            reg = fusb_read(FUSB302_REG_CONTROL2);
+            reg &= ~FUSB302_CTL2_TOGGLE;
+            fusb_write(FUSB302_REG_CONTROL2, reg);
+            // open manual switches
+            reg = fusb_read(FUSB302_REG_SWITCHES0);
+            reg &= ~(FUSB302_SW0_PU_EN1 | FUSB302_SW0_PU_EN2 | FUSB302_SW0_PDWN1 | FUSB302_SW0_PDWN2);
+            fusb_write(FUSB302_REG_SWITCHES0, reg);
+            state.pulling_up = 0;
+            break;
+        default:
+            // unsupported
+            break;
+    }
+}
+
+static void fusb_set_polarity(int polarity)
+{
+    uint8_t reg;
+    state.cc_polarity = polarity;
+
+    reg = fusb_read(FUSB302_REG_SWITCHES0);
+
+    // clear vconn bits
+    reg &= ~(FUSB302_SW0_VCONN_CC1 | FUSB302_SW0_VCONN_CC2);
+    if (state.vconn_enabled) {
+        // enable vconn on opposite cc line
+        if (polarity) {
+            reg |= FUSB302_SW0_VCONN_CC1;
+        } else {
+            reg |= FUSB302_SW0_VCONN_CC2;
+        }
+    }
+    // clear measure bits
+    reg &= ~(FUSB302_SW0_MEAS_CC1 | FUSB302_SW0_MEAS_CC2);
+    // set rx polarity
+    if (polarity)
+        reg |= FUSB302_SW0_MEAS_CC2;
+    else
+        reg |= FUSB302_SW0_MEAS_CC1;
+    fusb_write(FUSB302_REG_SWITCHES0, reg);
+
+    // clear tx cc bits
+    reg = fusb_read(FUSB302_REG_SWITCHES1);
+    reg &= ~(FUSB302_SW1_TXCC1 | FUSB302_SW1_TXCC2);
+    // set tx polarity
+    if (polarity)
+        reg |= FUSB302_SW1_TXCC2;
+    else
+        reg |= FUSB302_SW1_TXCC1;
+    fusb_write(FUSB302_REG_SWITCHES1, reg);
 }
 
 // enable rx must be called after an attach and cc polarity set
