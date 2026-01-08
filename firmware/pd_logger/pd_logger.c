@@ -326,21 +326,21 @@ static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size,
     // write phase
     if (out_size > 0) {
         if (i2c_start_write(I2C1, FUSB302_ADDR, out_size, flags))
-            return -1;
+            return 1;
 
         for (i = 0; i < out_size; i++)
             if (i2c_write_byte(I2C1, out[i]))
-                return -1;
+                return 1;
     }
 
     // read phase
     if (in_size > 0) {
         if (i2c_start_read(I2C1, FUSB302_ADDR, in_size, flags))
-            return -1;
+            return 1;
 
         for (i = 0; i < in_size; i++)
             if (i2c_read_byte(I2C1, &in[i]))
-                return -1;
+                return 1;
     }
 
     return 0;
@@ -943,7 +943,6 @@ static int get_num_bytes(uint16_t header)
 static int fusb_get_message(uint32_t *payload, uint16_t *head)
 {
     uint8_t buf[32];
-    uint8_t fifo_reg = FUSB302_REG_FIFOS;
     int rv;
     int len;
 
@@ -952,47 +951,30 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
         return -1;
 
     do {
+        buf[0] = FUSB302_REG_FIFOS;
          // Point FIFO read pointer (START, no STOP)
-        rv = fusb_xfer(&fifo_reg, 1, NULL, 0, I2C_XFER_START);
-        if (rv)
-            return rv;
+        rv = fusb_xfer(buf, 1, 0, 0, I2C_XFER_START);
 
         // Read token + PD header 3 bytes total (RESTART, no STOP)
-        rv = fusb_xfer(NULL, 0, buf, 3, I2C_XFER_START);
-        if (rv)
-            return rv;
-
-        // Validate RX token
-        if (buf[0] != FUSB302_TKN_SOP1) {
-            // Unsupported token, flush RX FIFO
-            fusb_flush_rx_fifo();
-            return -1;
-        }
+        rv |= fusb_xfer(0, 0, buf, 3, I2C_XFER_START);
 
         // Parse PD header
-        *head  = buf[1];
-        *head |= ((uint16_t)buf[2] << 8);
+        *head  = (buf[1] & 0xFF);
+        *head |= ((buf[2] << 8) & 0xFF00);
 
         // Determine payload length (bytes, excluding header)
         len = get_num_bytes(*head) - 2;
-        if (len < 0 || len > 28) {
-            fusb_flush_rx_fifo();
-            return -1;
-        }
 
         // Read payload + CRC (RESTART + STOP)
-        rv = fusb_xfer(NULL, 0, buf, len + 4, I2C_XFER_STOP);
-        if (rv)
-            return rv;
+        rv |= fusb_xfer(0, 0, buf, len + 4, I2C_XFER_STOP);
 
-    } while (PACKET_IS_GOOD_CRC(*head) && !fusb_rx_empty());
+    } while (!rv && PACKET_IS_GOOD_CRC(*head) && !fusb_rx_empty());
 
-    // Drop GoodCRC packets
-    if (PACKET_IS_GOOD_CRC(*head))
-        return -1;
+    // Exclude GoodCRC packets
+    if (!PACKET_IS_GOOD_CRC(*head))
+        // Payload excluding CRC
+        memcpy(payload, buf, len);   
 
-    // Payload excluding CRC
-    memcpy(payload, buf, len);
     return 0;
 }
 
