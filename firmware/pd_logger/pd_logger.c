@@ -1393,6 +1393,11 @@ static void poll(void)
             int cc_n = polarity ? 2 : 1;
             usart_printf("CC line on CC%d\r\n", cc_n);
             fusb_get_status(false);
+            // // setup as sink
+            // fusb_set_cc(TYPEC_CC_RD);
+            // fusb_set_polarity(state.cc_polarity);
+            // // enable rx
+            // fusb_rx_enable(true);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
@@ -1401,13 +1406,13 @@ static void poll(void)
             if (!still_attached) {
                 usart_printf("Dettach detected\r\n");
                 // disable rx
-                //fusb_rx_enable(false);
+                fusb_rx_enable(false);
+                // set default polarity
+                fusb_set_polarity(0);
                 // set default state
                 state.attached = 0;
                 state.cc_polarity = 0;
                 state.vconn_enabled = 0;
-                // set default polarity
-                //fusb_set_polarity(state.cc_polarity);
                 fusb_pd_reset();
             }
         }
@@ -1529,11 +1534,6 @@ int main(void)
         poll();
 
         if (state.attached) {
-            // // setup as sink
-            // fusb_set_cc(TYPEC_CC_RD);
-            // fusb_set_polarity(state.cc_polarity);
-            // // enable rx
-            // fusb_rx_enable(true);
             check_rx_messages();
         }
         
