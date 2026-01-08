@@ -453,6 +453,27 @@ static void check_rx_buffer(void)
     }
 }
 
+// Print current state struct values for debugging
+static void fusb_current_state(void)
+{
+    usart_printf("---- Current FUSB302 State ----\r\n");
+    usart_printf("CC Polarity: %d\r\n", state.cc_polarity);
+    usart_printf("VCONN Enabled: %d\r\n", state.vconn_enabled);
+    if (state.pulling_up) {
+        usart_printf("Pulling Up (DFP): %d\r\n", state.pulling_up);
+    } else {
+        usart_printf("Pulling Down (UFP): %d\r\n", state.pulling_up);
+    }
+    usart_printf("RX Enable: %d\r\n", state.rx_enable);
+    usart_printf("MDAC VNC: 0x%02X\r\n", state.mdac_vnc);
+    usart_printf("MDAC RD: 0x%02X\r\n", state.mdac_rd);
+    if (state.attached) {
+        usart_printf("Device Attached: True\r\n");
+    } else {
+        usart_printf("Device Attached: False\r\n");
+    }
+    usart_printf("---- End State ----\r\n");
+}
 
 /* ------------------------------------------------------------
  * FUSB302 functions
@@ -547,6 +568,30 @@ static void fusb_sop_prime_db_enable(bool enable)
     fusb_write(FUSB302_REG_CONTROL1, reg);
 }
 
+static void fusb_enable_gcrc(bool enable)
+{
+    // AUTO_GCRC is in SWITCHES1 register
+    uint8_t reg = fusb_read(FUSB302_REG_SWITCHES1);
+    if (enable) {
+        reg |= FUSB302_SW1_AUTO_GCRC;
+    } else {
+        reg &= ~FUSB302_SW1_AUTO_GCRC;
+    }
+    fusb_write(FUSB302_REG_SWITCHES1, reg);
+}
+
+static int fusb_int_vbusok(void)
+{
+    // Note: interrupt is cleared when read
+    // return 1 for vbusok else 0
+    uint8_t reg = fusb_read(FUSB302_REG_INTERRUPT);
+    if (reg & FUSB302_INT_VBUSOK) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 // hard coded rp to default usb (pull up to 1.5A)
 static void fusb_set_rp_default(void)
 {
@@ -572,82 +617,6 @@ static void fusb_set_msg_header(uint8_t prole, uint8_t drole)
         reg |= FUSB302_SW1_DATAROLE;
 
     fusb_write(FUSB302_REG_SWITCHES1, reg);
-}
-
-// Print current state struct values for debugging
-static void fusb_current_state(void)
-{
-    usart_printf("---- Current FUSB302 State ----\r\n");
-    usart_printf("CC Polarity: %d\r\n", state.cc_polarity);
-    usart_printf("VCONN Enabled: %d\r\n", state.vconn_enabled);
-    if (state.pulling_up) {
-        usart_printf("Pulling Up (DFP): %d\r\n", state.pulling_up);
-    } else {
-        usart_printf("Pulling Down (UFP): %d\r\n", state.pulling_up);
-    }
-    usart_printf("RX Enable: %d\r\n", state.rx_enable);
-    usart_printf("MDAC VNC: 0x%02X\r\n", state.mdac_vnc);
-    usart_printf("MDAC RD: 0x%02X\r\n", state.mdac_rd);
-    if (state.attached) {
-        usart_printf("Device Attached: True\r\n");
-    } else {
-        usart_printf("Device Attached: False\r\n");
-    }
-    usart_printf("---- End State ----\r\n");
-}
-
-static void fusb_setup(void)
-{
-    uint8_t reg;
-
-    state.mdac_vnc = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_MV);
-    state.mdac_rd = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_RD_MV);
-
-    // Reset FUSB302
-    fusb_reset();
-
-    // CONTROL3 Turn on retries and set number of retries
-    reg = fusb_read(FUSB302_REG_CONTROL3);
-    reg |= (FUSB302_CTL3_AUTO_RETRY | FUSB302_CTL3_NRETRIES_MASK);
-    fusb_write(FUSB302_REG_CONTROL3, reg);
-
-    // Create interrupt masks
-    reg = 0xFF;
-    // CC level changes
-    reg &= ~FUSB302_MASK_BC_LVL;
-    // Collisions
-    reg &= ~FUSB302_MASK_COLLISION;
-    // Alert
-    reg &= ~FUSB302_MASK_ALERT;
-    // Packet received with correct crc
-    reg &= ~FUSB302_MASK_CRC_CHK;
-    fusb_write(FUSB302_REG_MASK, reg);
-
-    // MaskA reg masks
-    reg = 0xFF;
-    reg &= ~FUSB302_MASKA_RETRYFAIL;
-    reg &= ~FUSB302_MASKA_HARDSENT;
-    reg &= ~FUSB302_MASKA_TXSENT;
-    reg &= ~FUSB302_MASKA_HARDRST;
-    fusb_write(FUSB302_REG_MASKA, reg);
-    
-    // MaskB GoodCRC to ack pd message
-    reg = 0xFF;
-    reg &= ~FUSB302_MASKB_GCRCSENT;
-    fusb_write(FUSB302_REG_MASKB, reg);
-
-    // CONTROL0 Enable interrupt
-    reg = fusb_read(FUSB302_REG_CONTROL0);
-    reg &= ~FUSB302_CTL0_INT_MASK;
-    fusb_write(FUSB302_REG_CONTROL0, reg);
-
-    // Set state defaults
-    state.vconn_enabled = 0;
-    state.cc_polarity = 0;
-    state.attached = 0;
-
-    // Power all
-    fusb_power_all();
 }
 
 static int convert_bc_lvl(int bc_lvl)
@@ -769,18 +738,6 @@ static void fusb_measure_cc_pin_snk(uint8_t *cc1, uint8_t *cc2)
         reg &= ~FUSB302_SW0_MEAS_CC2;
     }
     fusb_write(FUSB302_REG_SWITCHES0, reg);
-}
-
-static void fusb_enable_gcrc(bool enable)
-{
-    // AUTO_GCRC is in SWITCHES1 register
-    uint8_t reg = fusb_read(FUSB302_REG_SWITCHES1);
-    if (enable) {
-        reg |= FUSB302_SW1_AUTO_GCRC;
-    } else {
-        reg &= ~FUSB302_SW1_AUTO_GCRC;
-    }
-    fusb_write(FUSB302_REG_SWITCHES1, reg);
 }
 
 static int fusb_check_cc_pin_snk(void)
@@ -1006,18 +963,6 @@ static int fusb_measure_cc_voltage(bool cc1)
 
     // Approximate conversion to mV
     return dac * 42;
-}
-
-static int fusb_int_vbusok(void)
-{
-    // Note: interrupt is cleared when read
-    // return 1 for vbusok else 0
-    uint8_t reg = fusb_read(FUSB302_REG_INTERRUPT);
-    if (reg & FUSB302_INT_VBUSOK) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 static int fusb_check_cc_voltage(void)
@@ -1260,6 +1205,60 @@ static void fusb_get_status(bool verbose)
     usart_printf("VBUS Voltage: %d mV\r\n", vbus_voltage);
     int cc_volt = fusb_check_cc_voltage();
     usart_printf("CC voltage: %d mV\r\n", cc_volt);
+}
+
+static void fusb_setup(void)
+{
+    uint8_t reg;
+
+    state.mdac_vnc = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_MV);
+    state.mdac_rd = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_RD_MV);
+
+    // Reset FUSB302
+    fusb_reset();
+
+    // CONTROL3 Turn on retries and set number of retries
+    reg = fusb_read(FUSB302_REG_CONTROL3);
+    reg |= (FUSB302_CTL3_AUTO_RETRY | FUSB302_CTL3_NRETRIES_MASK);
+    fusb_write(FUSB302_REG_CONTROL3, reg);
+
+    // Create interrupt masks
+    reg = 0xFF;
+    // CC level changes
+    reg &= ~FUSB302_MASK_BC_LVL;
+    // Collisions
+    reg &= ~FUSB302_MASK_COLLISION;
+    // Alert
+    reg &= ~FUSB302_MASK_ALERT;
+    // Packet received with correct crc
+    reg &= ~FUSB302_MASK_CRC_CHK;
+    fusb_write(FUSB302_REG_MASK, reg);
+
+    // MaskA reg masks
+    reg = 0xFF;
+    reg &= ~FUSB302_MASKA_RETRYFAIL;
+    reg &= ~FUSB302_MASKA_HARDSENT;
+    reg &= ~FUSB302_MASKA_TXSENT;
+    reg &= ~FUSB302_MASKA_HARDRST;
+    fusb_write(FUSB302_REG_MASKA, reg);
+    
+    // MaskB GoodCRC to ack pd message
+    reg = 0xFF;
+    reg &= ~FUSB302_MASKB_GCRCSENT;
+    fusb_write(FUSB302_REG_MASKB, reg);
+
+    // CONTROL0 Enable interrupt
+    reg = fusb_read(FUSB302_REG_CONTROL0);
+    reg &= ~FUSB302_CTL0_INT_MASK;
+    fusb_write(FUSB302_REG_CONTROL0, reg);
+
+    // Set state defaults
+    state.vconn_enabled = 0;
+    state.cc_polarity = 0;
+    state.attached = 0;
+
+    // Power all
+    fusb_power_all();
 }
 
 /* ------------------------------------------------------------
