@@ -1458,7 +1458,7 @@ int main(void)
     i2c_setup();
     exti_setup(); 
 
-    fusb_setup();
+    // fusb_setup();
 
     while (1) {
         if (usart_rx_ready()) {
