@@ -1256,6 +1256,10 @@ static void fusb_setup(void)
     state.cc_polarity = 0;
     state.attached = 0;
 
+    // enable sop' and sop" reception
+    fusb_sop_prime_enable(true);
+    fusb_sop_prime_db_enable(true);
+
     // Power all
     fusb_power_all();
 }
@@ -1392,12 +1396,13 @@ static void poll(void)
             int polarity = fusb_check_cc_pin();
             int cc_n = polarity ? 2 : 1;
             usart_printf("CC line on CC%d\r\n", cc_n);
+            // set cc pull
+            fusb_set_cc(state.pulling_up ? TYPEC_CC_RP : TYPEC_CC_RD);
+            fusb_set_polarity(state.cc_polarity);
+            // enable rx
+            fusb_rx_enable(true);
+            fusb_pd_reset();
             fusb_get_status(false);
-            // // setup as sink
-            // fusb_set_cc(TYPEC_CC_RD);
-            // fusb_set_polarity(state.cc_polarity);
-            // // enable rx
-            // fusb_rx_enable(true);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
