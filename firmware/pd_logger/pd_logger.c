@@ -1343,7 +1343,7 @@ static void poll(void)
                 fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
             else
                 fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-            fusb_get_status(true);
+            fusb_get_status(false);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
