@@ -1339,10 +1339,6 @@ static void poll(void)
             fusb_set_polarity(state.cc_polarity);
             // enable rx
             fusb_rx_enable(true);
-            if (state.pulling_up)
-                fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
-            else
-                fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
             fusb_get_status(false);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
@@ -1484,6 +1480,17 @@ int main(void)
         poll();
 
         if (state.attached) {
+            if (!state.tx_sent) {
+                if (state.pulling_up) {
+                    fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
+                    pd_send_src_caps();
+                    state.tx_sent = 1;
+                } else {
+                    fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
+                    pd_send_snk_caps();
+                    state.tx_sent = 1;
+                }
+            }
             check_rx_messages();
         }
         // small delay to avoid busy looping
