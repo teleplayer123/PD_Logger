@@ -1278,6 +1278,7 @@ static void pd_init_src(void)
     fusb_rx_enable(false);
     fusb_set_rp_default();
     state.pulling_up = 1;
+    state.rx_enable = 0;
 }
 
 static void pd_init_snk(void)
@@ -1286,8 +1287,8 @@ static void pd_init_snk(void)
     pd.data_role = PD_DATA_ROLE_UFP;
     pd.rev = PD_SPEC_REV3;
     pd.msg_id = 0;
-    fusb_rx_enable(false);
     state.pulling_up = 0;
+    state.rx_enable = 0;
 }
 
 /* ------------------------------------------------------------
@@ -1322,6 +1323,21 @@ static void pd_send_snk_caps(void)
     pd.msg_id++;
 }
 
+static void pd_send_caps(void)
+{
+    if (!state.tx_sent) {
+        if (state.pulling_up) {
+            fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
+            pd_send_src_caps();
+            state.tx_sent = 1;
+        } else {
+            fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
+            pd_send_snk_caps();
+            state.tx_sent = 1;
+        }
+    }
+}
+
 // poll function to get/set changes in state
 static void poll(void)
 {
@@ -1334,22 +1350,6 @@ static void poll(void)
             int polarity = fusb_check_cc_pin();
             int cc_n = polarity ? 2 : 1;
             usart_printf("CC line on CC%d\r\n", cc_n);
-            // set cc pull
-            fusb_set_cc(state.pulling_up ? TYPEC_CC_RP : TYPEC_CC_RD);
-            fusb_set_polarity(state.cc_polarity);
-            if (!state.tx_sent) {
-                if (state.pulling_up) {
-                    fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
-                    pd_send_src_caps();
-                    state.tx_sent = 1;
-                } else {
-                    fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-                    pd_send_snk_caps();
-                    state.tx_sent = 1;
-                }
-            }
-            // enable rx
-            fusb_rx_enable(true);
             fusb_get_status(false);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
@@ -1358,10 +1358,6 @@ static void poll(void)
             // if CC voltage is 0, assume device is not attached (some edge cases will be missed)
             if (!still_attached) {
                 usart_printf("Dettach detected\r\n");
-                // disable rx
-                fusb_rx_enable(false);
-                // set default polarity
-                fusb_set_polarity(0);
                 // set default state
                 state.attached = 0;
                 state.cc_polarity = 0;
@@ -1489,12 +1485,7 @@ int main(void)
             } 
         }
         poll();
-
-        if (state.attached) {
-            check_rx_messages();
-            dump_rx_messages();
-        }
         // small delay to avoid busy looping
-        fusb_delay_ms(500);
+        fusb_delay_ms(1000);
     }
 }
