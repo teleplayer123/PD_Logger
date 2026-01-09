@@ -1337,6 +1337,17 @@ static void poll(void)
             // set cc pull
             fusb_set_cc(state.pulling_up ? TYPEC_CC_RP : TYPEC_CC_RD);
             fusb_set_polarity(state.cc_polarity);
+            if (!state.tx_sent) {
+                if (state.pulling_up) {
+                    fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
+                    pd_send_src_caps();
+                    state.tx_sent = 1;
+                } else {
+                    fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
+                    pd_send_snk_caps();
+                    state.tx_sent = 1;
+                }
+            }
             // enable rx
             fusb_rx_enable(true);
             fusb_get_status(false);
@@ -1480,18 +1491,8 @@ int main(void)
         poll();
 
         if (state.attached) {
-            if (!state.tx_sent) {
-                if (state.pulling_up) {
-                    fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
-                    pd_send_src_caps();
-                    state.tx_sent = 1;
-                } else {
-                    fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-                    pd_send_snk_caps();
-                    state.tx_sent = 1;
-                }
-            }
             check_rx_messages();
+            dump_rx_messages();
         }
         // small delay to avoid busy looping
         fusb_delay_ms(500);
