@@ -39,6 +39,8 @@ static struct fusb302_chip_state {
 	uint8_t mdac_rd;
     // device attached = 1, no device attached = 0
     int attached;
+    // 1 = sink sent power profile, 0 = no power profile sent
+    int tx_sent;
 } state;
 
 // Struct to track PD communication state
@@ -1255,6 +1257,8 @@ static void fusb_setup(void)
     state.vconn_enabled = 0;
     state.cc_polarity = 0;
     state.attached = 0;
+    state.tx_sent = 0;
+    state.pulling_up = 0;
 
     // enable sop' and sop" reception
     fusb_sop_prime_enable(true);
@@ -1264,125 +1268,58 @@ static void fusb_setup(void)
     fusb_power_all();
 }
 
-/* ------------------------------------------------------------
- * PD Message and Interrupt Handling
- * ------------------------------------------------------------ */
+static void pd_init_src(void)
+{
+    pd.power_role = PD_POWER_ROLE_SOURCE;
+    pd.data_role = PD_DATA_ROLE_DFP;
+    pd.rev = PD_SPEC_REV3;
+    pd.msg_id = 0;
+    fusb_rx_enable(false);
+    fusb_set_rp_default();
+    state.pulling_up = 1;
+}
 
-// static uint8_t rx_buffer[MAX_PD_PACKET_SIZE];
-// void exti4_15_isr(void) {
-//     usart_printf("EXTI interrupt triggered!\r\n");
-//     // Check if the interrupt is from EXTI line 8 (PB8)
-//     if (exti_get_flag_status(EXTI8)) {
-//         usart_printf("INT_N pin asserted!\r\n");
-//         // Reading Interrupt register clears the interrupt condition
-//         uint8_t irq_status = fusb_read(FUSB302_REG_INTERRUPT); 
-//         uint8_t status1 = fusb_read(FUSB302_REG_STATUS1); // Read status register
-        
-//         if (irq_status & FUSB302_INT_CRC_CHK) { // Valid packet received
-            
-//             if (status1 & FUSB302_STATUS1_RX_EMPTY) {
-//                 // Should not happen if CRC_CHK is set, but check anyway
-//                 usart_printf("IRQ triggered but FIFO empty.\r\n");
-//                 goto end_irq;
-//             }
-
-//             // Read SOP Token
-//             // SOP token is the first byte in FIFO
-//             uint8_t sop_token = fusb_read(FUSB302_REG_FIFOS);
-//             usart_printf("SOP Token: %02X\r\n", sop_token);
-//             rx_buffer[0] = sop_token;
-//             size_t bytes_read = 1;
-            
-//             // Read Message Header (2 bytes)
-//             fusb_read_fifo(&rx_buffer[bytes_read], 2);
-//             uint16_t header = (uint16_t)rx_buffer[bytes_read] | (uint16_t)(rx_buffer[bytes_read + 1] << 8);
-//             usart_printf("Message header: %04X\r\n", header);
-//             bytes_read += 2;
-            
-//             size_t payload_words = 0;
-//             size_t total_data_bytes = 0;
-//             const char* packet_type_str = "CTRL";
-
-//             if (PD_HEADER_EXTENDED(header)) {
-//                 // Extended Message
-//                 packet_type_str = "EXTD";
-                
-//                 // Read Extended Message Header (2 bytes)
-//                 fusb_read_fifo(&rx_buffer[bytes_read], 2);
-//                 uint16_t ext_header = (uint16_t)rx_buffer[bytes_read] | (uint16_t)(rx_buffer[bytes_read + 1] << 8);
-//                 usart_printf("Extended message header: %04X\r\n", ext_header);
-//                 bytes_read += 2;
-                
-//                 // Data Size (B8:0) tells total payload size in bytes
-//                 uint16_t data_size = ext_header & 0x01FF;
-//                 usart_printf("Data size: %04X\r\n", data_size);
-//                 total_data_bytes = data_size;
-                
-//                 // The actual payload data might be padded. For sniffing, read payload bytes.
-//                 // Payload must be read as multiple of 4 bytes (Data Objects) 
-//                 // up to MaxExtendedMsgLegacyLen (26 bytes, if chunking is involved)
-//                 // For simplicity, we assume reading the full length specified by Data Size + CRC (4 bytes)
-//                 size_t remaining_bytes_to_read = total_data_bytes + 4; // Data + CRC
-                
-//                 // Safely clamp remaining read length to avoid buffer overflow
-//                 if (bytes_read + remaining_bytes_to_read > MAX_PD_PACKET_SIZE) {
-//                     remaining_bytes_to_read = MAX_PD_PACKET_SIZE - bytes_read;
-//                 }
-                
-//                 fusb_read_fifo(&rx_buffer[bytes_read], remaining_bytes_to_read);
-//                 bytes_read += remaining_bytes_to_read;
-//                 check_rx_buffer();
-                
-//             } else {
-//                 // Control or Data Message
-//                 payload_words = PD_HEADER_NUM_DATA_OBJECTS(header);
-//                 total_data_bytes = payload_words * 4; // 1 Data Object = 4 bytes
-                
-//                 if (payload_words > 0) {
-//                     packet_type_str = "DATA";
-//                 }
-                
-//                 size_t total_payload_plus_crc = total_data_bytes + 4; // CRC is 4 bytes
-//                 size_t remaining_bytes_to_read = total_payload_plus_crc;
-
-//                 // Safely clamp remaining read length
-//                 if (bytes_read + remaining_bytes_to_read > MAX_PD_PACKET_SIZE) {
-//                     remaining_bytes_to_read = MAX_PD_PACKET_SIZE - bytes_read;
-//                 }
-                
-//                 fusb_read_fifo(&rx_buffer[bytes_read], remaining_bytes_to_read);
-//                 bytes_read += remaining_bytes_to_read;
-//                 check_rx_buffer();
-//             }
-            
-//             // Log Output
-//             usart_printf("--- PD PACKET SNIFFED ---\r\n");
-//             usart_printf("Type: %s (DOs: %d) | Total Bytes: %d\r\n", packet_type_str, (int)payload_words, (int)bytes_read);
-            
-//             // Print raw buffer content
-//             for (size_t i = 0; i < bytes_read; i++) {
-//                 usart_printf("%02X ", rx_buffer[i]);
-//                 if (i % 16 == 15) usart_printf("\r\n");
-//             }
-//             usart_printf("\r\n-------------------------\r\n");
-            
-//             // Flush RxFIFO completely if necessary
-//             // fusb_write(FUSB302_REG_CONTROL1, FUSB302_CTL1_RX_FLUSH); 
-            
-//         } else if (irq_status & FUSB302_INT_ACTIVITY) {
-//             // Log CC activity if CRC_CHK wasn't set, might indicate noise or invalid frame
-//             usart_printf("CC Activity Detected (Non-CRC event).\r\n");
-//         }
-
-//         end_irq:
-//         // Clear the pending EXTI interrupt flag
-//         exti_reset_request(EXTI8);
-//     }
-// }
+static void pd_init_snk(void)
+{
+    pd.power_role = PD_POWER_ROLE_SINK;
+    pd.data_role = PD_DATA_ROLE_UFP;
+    pd.rev = PD_SPEC_REV3;
+    pd.msg_id = 0;
+    fusb_rx_enable(false);
+    state.pulling_up = 0;
+}
 
 /* ------------------------------------------------------------
  * Main Program Functions
  * ------------------------------------------------------------ */
+
+static void pd_send_src_caps(void)
+{
+    const uint32_t *src_pdo = pd_src_pdo;
+    const int src_pdo_cnt = pd_src_pdo_cnt;
+    uint16_t header;
+
+    header = PD_HEADER(PD_DATA_SOURCE_CAPABILITIES, pd.power_role,
+        pd.data_role, pd.msg_id, src_pdo_cnt,
+        pd.rev, 0);
+    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, src_pdo);
+    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    pd.msg_id++;
+}
+
+static void pd_send_snk_caps(void)
+{
+    const uint32_t *snk_pdo = pd_snk_pdo;
+    const int snk_pdo_cnt = pd_snk_pdo_cnt;
+    uint16_t header;
+
+    header = PD_HEADER(PD_DATA_SINK_CAPABILITIES, pd.power_role,
+        pd.data_role, pd.msg_id, snk_pdo_cnt,
+        pd.rev, 0);
+    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, snk_pdo);
+    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    pd.msg_id++;
+}
 
 // poll function to get/set changes in state
 static void poll(void)
@@ -1405,7 +1342,6 @@ static void poll(void)
                 fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
             else
                 fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-            fusb_pd_reset();
             fusb_get_status(false);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
@@ -1422,6 +1358,9 @@ static void poll(void)
                 state.attached = 0;
                 state.cc_polarity = 0;
                 state.vconn_enabled = 0;
+                state.pulling_up = 0;
+                state.tx_sent = 0;
+                pd.msg_id = 0;
                 fusb_pd_reset();
             }
         }
@@ -1531,6 +1470,7 @@ int main(void)
     exti_setup(); 
 
     fusb_setup();
+    pd_init_snk();
 
     while (1) {
         if (usart_rx_ready()) {
@@ -1543,6 +1483,11 @@ int main(void)
         poll();
 
         if (state.attached) {
+            if (!state.tx_sent) {
+                // for testing, send sink capabilities after attach
+                pd_send_snk_caps();
+                state.tx_sent = 1;
+            }
             check_rx_messages();
         }
         // small delay to avoid busy looping

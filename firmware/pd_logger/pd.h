@@ -48,6 +48,35 @@
 #define PD_SPEC_REV2  1
 #define PD_SPEC_REV3  2
 
+#define ARRAY_SIZE(t) (sizeof(t) / sizeof(t[0]))
+
+#define PDO_FIXED_DUAL_ROLE (1 << 29) // Dual role device
+#define PDO_FIXED_SUSPEND   (1 << 28) // USB Suspend supported
+#define PDO_FIXED_EXTERNAL  (1 << 27) // Externally powered 
+#define PDO_FIXED_COMM_CAP  (1 << 26) // USB Communications Capable
+#define PDO_FIXED_DATA_SWAP (1 << 25) // Data role swap command supported
+#define PDO_FIXED_PEAK_CURR () // Peak current 
+#define PDO_FIXED_VOLT(mv)  (((mv)/50) << 10) // Voltage in 50mV units
+#define PDO_FIXED_CURR(ma)  (((ma)/10) << 0)  // Max current in 10mA units
+
+#define PDO_FIXED(mv, ma, flags) (PDO_FIXED_VOLT(mv) |\
+				  PDO_FIXED_CURR(ma) | (flags))
+
+#define PDO_FIXED_FLAGS (PDO_FIXED_DUAL_ROLE | PDO_FIXED_DATA_SWAP |\
+PDO_FIXED_COMM_CAP)
+
+const uint32_t pd_src_pdo[] = {
+	PDO_FIXED(5000, 1500, PDO_FIXED_FLAGS),
+};
+const int pd_src_pdo_cnt = ARRAY_SIZE(pd_src_pdo);
+
+const uint32_t pd_snk_pdo[] = {
+	PDO_FIXED(5000, 500, PDO_FIXED_FLAGS),
+	PDO_FIXED(9000, 500, PDO_FIXED_FLAGS),
+	PDO_FIXED(20000, 500, PDO_FIXED_FLAGS),
+};
+const int pd_snk_pdo_cnt = ARRAY_SIZE(pd_snk_pdo);
+
 /* Control Message type - USB-PD Spec Rev 3.2, Ver 1.1, Table 6-5 */
 enum pd_ctrl_msg_type {
 	PD_CTRL_INVALID = 0, // 0 Reserved - DO NOT PUT IN MESSAGES
