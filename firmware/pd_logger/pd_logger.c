@@ -353,7 +353,8 @@ static int fusb_xfer(const uint8_t *out, int out_size, uint8_t *in, int in_size,
 
 static uint8_t fusb_rx_empty(void) 
 {
-    return fusb_read(FUSB302_REG_STATUS1) & FUSB302_STATUS1_RX_EMPTY;
+    uint8_t status1 = fusb_read(FUSB302_REG_STATUS1);
+    return (status1 & FUSB302_STATUS1_RX_EMPTY) != 0;
 }
 
 /* ------------------------------------------------------------
@@ -662,7 +663,7 @@ static int fusb_measure_cc_pin_src(uint8_t cc_reg)
     // Set MDAC to default value
     uint8_t mdac = FUSB302_MEAS_MDAC_MV(PD_SRC_DEF_MV); // converts milivolts to MDAC code to write to MEASURE register
     fusb_write(FUSB302_REG_MEASURE, mdac);
-    fusb_delay_us(250);
+    fusb_delay_us(350);
     // Read status register
     reg = fusb_read(FUSB302_REG_STATUS0);
     // Assume open
@@ -704,7 +705,7 @@ static void fusb_measure_cc_pin_snk(uint8_t *cc1, uint8_t *cc2)
     reg |= FUSB302_SW0_MEAS_CC1;
     fusb_write(FUSB302_REG_SWITCHES0, reg);
     // Wait for measurement
-    fusb_delay_us(250);
+    fusb_delay_us(350);
     // Read cc1 measurement
     bc_lvl_cc1 = fusb_read(FUSB302_REG_STATUS0);
     // Read bc_lvl 
@@ -717,7 +718,7 @@ static void fusb_measure_cc_pin_snk(uint8_t *cc1, uint8_t *cc2)
     reg |= FUSB302_SW0_MEAS_CC2;
     fusb_write(FUSB302_REG_SWITCHES0, reg);
     // Wait on measurement
-    fusb_delay_us(250);
+    fusb_delay_us(350);
     // Read cc2 measurement
     bc_lvl_cc2 = fusb_read(FUSB302_REG_STATUS0);
     // Read bc_lvl
@@ -1342,7 +1343,7 @@ static void poll(void)
                 fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
             else
                 fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-            fusb_get_status(false);
+            fusb_get_status(true);
         } else {
             // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
@@ -1479,7 +1480,7 @@ int main(void)
                 usart_printf("Logging paused. Entering debug menu...\r\n");
                 debug_cli();
             } 
-        }    
+        }
         poll();
 
         if (state.attached) {
@@ -1491,6 +1492,6 @@ int main(void)
             check_rx_messages();
         }
         // small delay to avoid busy looping
-        fusb_delay_ms(1);
+        fusb_delay_ms(500);
     }
 }
