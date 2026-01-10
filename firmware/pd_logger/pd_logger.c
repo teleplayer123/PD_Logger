@@ -30,6 +30,7 @@ volatile uint32_t system_millis;
 static struct fusb302_chip_state {
     // CC1 = 0, CC2 = 1
 	int cc_polarity;
+    // enabled = 1, disabled = 0
 	int vconn_enabled;
 	// pulling up (DFP) = 1, pulling down (UFP) = 0
 	int pulling_up;
@@ -866,6 +867,23 @@ static void fusb_set_polarity(int polarity)
     fusb_write(FUSB302_REG_SWITCHES1, reg);
 }
 
+static void fusb_set_vconn(int enable)
+{
+    uint8_t reg;
+    // update vconn state
+    state.vconn_enabled = enable;
+    
+    if (enable) {
+        // set saved polarity
+        fusb_set_polarity(state.cc_polarity);
+    } else {
+        // clear both vconn_cc switches to disable vconn
+        reg = fusb_read(FUSB302_REG_SWITCHES0);
+        reg &= ~(FUSB302_SW0_VCONN_CC1 | FUSB302_SW0_VCONN_CC2);
+        fusb_write(FUSB302_REG_SWITCHES0, reg);
+    }
+}
+
 // enable rx must be called after an attach and cc polarity set
 static void fusb_rx_enable(bool enable)
 {
@@ -1196,8 +1214,8 @@ static void dump_rx_messages(void)
 static void fusb_get_status(bool verbose)
 {
     usart_printf("[%d] --- Status Update ---\r\n", system_millis);
+    fusb_check_status_regs();
     if (verbose) {
-        fusb_check_status_regs();
         fusb_check_switches_regs();
         fusb_check_control_regs();
         fusb_check_mask_regs();
@@ -1291,6 +1309,7 @@ static void pd_init_snk(void)
     pd.msg_id = 0;
     state.pulling_up = 0;
     state.rx_enable = 0;
+    state.vconn_enabled = 0;
     fusb_rx_enable(false);
 }
 
@@ -1356,6 +1375,7 @@ static void poll(void)
             fusb_set_cc(state.pulling_up ? TYPEC_CC_RP : TYPEC_CC_RD);
             fusb_set_polarity(polarity);
             fusb_set_msg_header(pd.power_role, pd.data_role);
+            fusb_set_vconn(state.vconn_enabled);
             fusb_rx_enable(true);
             fusb_get_status(false);
         } else {
@@ -1497,7 +1517,8 @@ int main(void)
                 check_rx_messages();
             }
         }
+
         // small delay to avoid busy looping
-        fusb_delay_ms(100);
+        fusb_delay_ms(1);
     }
 }
