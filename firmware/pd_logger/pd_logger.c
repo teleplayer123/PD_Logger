@@ -1202,7 +1202,7 @@ static void fusb_get_status(bool verbose)
         fusb_check_control_regs();
         fusb_check_mask_regs();
     }
-    usart_printf("INT pin=%02X\r\n", system_millis, gpio_get(GPIOB, GPIO8) ? 1 : 0);
+    usart_printf("INT pin=%02X\r\n", gpio_get(GPIOB, GPIO8) ? 1 : 0);
     fusb_current_state();
     int vbus_voltage = fusb_measure_vbus_voltage();
     usart_printf("VBUS Voltage: %d mV\r\n", vbus_voltage);
