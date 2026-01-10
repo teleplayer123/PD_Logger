@@ -1496,9 +1496,10 @@ int main(void)
         if (state.attached) {
             if (state.rx_enable) {
                 check_rx_messages();
+                dump_rx_messages();
             }
         }
         // small delay to avoid busy looping
-        fusb_delay_us(1000);
+        fusb_delay_ms(100);
     }
 }
