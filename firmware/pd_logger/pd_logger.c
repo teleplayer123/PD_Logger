@@ -1510,6 +1510,7 @@ int main(void)
                 debug_cli();
             } 
         }
+        // TODO: have poll check interrupts and move state updates out of poll
         poll();
 
         if (state.attached) {
