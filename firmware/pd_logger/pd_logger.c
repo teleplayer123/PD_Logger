@@ -1372,7 +1372,6 @@ static void poll(void)
                 state.pulling_up = 0;
                 state.tx_sent = 0;
                 pd.msg_id = 0;
-                fusb_set_cc(TYPEC_CC_OPEN);
                 fusb_rx_enable(false);
                 fusb_pd_reset();
             }
