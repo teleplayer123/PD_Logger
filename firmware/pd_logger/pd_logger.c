@@ -1496,7 +1496,6 @@ int main(void)
         if (state.attached) {
             if (state.rx_enable) {
                 check_rx_messages();
-                dump_rx_messages();
             }
         }
         // small delay to avoid busy looping
