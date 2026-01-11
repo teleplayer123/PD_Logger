@@ -539,23 +539,12 @@ static void fusb_unmask_interrupts(void)
     fusb_write(FUSB302_REG_MASKB, 0x00);
 }
 
-static void fusb_clear_interrupts(bool verbose)
+static void fusb_clear_interrupts()
 {
     // Read interrupts to clear
-    if (verbose) {
-        // option to print registers
-        uint8_t reg;
-        reg = fusb_read(FUSB302_REG_INTERRUPT);
-        print_byte_as_bits(reg, FUSB302_REG_INTERRUPT);
-        reg = fusb_read(FUSB302_REG_INTERRUPTA);
-        print_byte_as_bits(reg, FUSB302_REG_INTERRUPTA);
-        reg = fusb_read(FUSB302_REG_INTERRUPTB);
-        print_byte_as_bits(reg, FUSB302_REG_INTERRUPTB);
-    } else {
-        fusb_read(FUSB302_REG_INTERRUPT);
-        fusb_read(FUSB302_REG_INTERRUPTA);
-        fusb_read(FUSB302_REG_INTERRUPTB);
-    }
+    fusb_read(FUSB302_REG_INTERRUPT);
+    fusb_read(FUSB302_REG_INTERRUPTA);
+    fusb_read(FUSB302_REG_INTERRUPTB);
 }
 
 static void fusb_sop_prime_enable(bool enable)
@@ -1390,7 +1379,7 @@ static void poll(void)
             fusb_set_msg_header(pd.power_role, pd.data_role);
             fusb_set_vconn(state.vconn_enabled);
             fusb_rx_enable(true);
-            fusb_clear_interrupts(true);
+            fusb_clear_interrupts();
             fusb_get_status(false);
         } else {
             // verify device is dettached
