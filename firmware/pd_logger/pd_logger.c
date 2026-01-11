@@ -265,9 +265,10 @@ static int i2c_start_write(uint32_t i2c, uint8_t addr, uint8_t nbytes, int flags
 
     // Wait for bus free only if START requested
     if (flags & I2C_XFER_START) {
-        while (I2C_ISR(i2c) & I2C_ISR_BUSY)
-            if (--timeout == 0)
+        while (I2C_ISR(i2c) & I2C_ISR_BUSY) {
+            if (--timeout <= 0)
                 return -1;
+        }
     }
 
     cr2 |= (addr << 1);
@@ -305,9 +306,10 @@ static int i2c_write_byte(uint32_t i2c, uint8_t val)
 {
     uint32_t timeout = 100000;
 
-    while (!(I2C_ISR(i2c) & I2C_ISR_TXIS))
-        if (--timeout == 0)
+    while (!(I2C_ISR(i2c) & I2C_ISR_TXIS)) {
+        if (--timeout <= 0)
             return -1;
+    }
 
     I2C_TXDR(i2c) = val;
     return 0;
@@ -317,9 +319,10 @@ static int i2c_read_byte(uint32_t i2c, uint8_t *val)
 {
     uint32_t timeout = 100000;
 
-    while (!(I2C_ISR(i2c) & I2C_ISR_RXNE))
-        if (--timeout == 0)
+    while (!(I2C_ISR(i2c) & I2C_ISR_RXNE)) {
+        if (--timeout <= 0)
             return -1;
+    }
 
     *val = I2C_RXDR(i2c);
     return 0;
@@ -536,12 +539,23 @@ static void fusb_unmask_interrupts(void)
     fusb_write(FUSB302_REG_MASKB, 0x00);
 }
 
-static void fusb_clear_interrupts(void)
+static void fusb_clear_interrupts(bool verbose)
 {
-    // Reading interrupts clears them
-    fusb_read(FUSB302_REG_INTERRUPT);
-    fusb_read(FUSB302_REG_INTERRUPTA);
-    fusb_read(FUSB302_REG_INTERRUPTB);
+    // Read interrupts to clear
+    if (verbose) {
+        // option to print registers
+        uint8_t reg;
+        reg = fusb_read(FUSB302_REG_INTERRUPT);
+        print_byte_as_bits(reg, FUSB302_REG_INTERRUPT);
+        reg = fusb_read(FUSB302_REG_INTERRUPTA);
+        print_byte_as_bits(reg, FUSB302_REG_INTERRUPTA);
+        reg = fusb_read(FUSB302_REG_INTERRUPTB);
+        print_byte_as_bits(reg, FUSB302_REG_INTERRUPTB);
+    } else {
+        fusb_read(FUSB302_REG_INTERRUPT);
+        fusb_read(FUSB302_REG_INTERRUPTA);
+        fusb_read(FUSB302_REG_INTERRUPTB);
+    }
 }
 
 static void fusb_sop_prime_enable(bool enable)
@@ -932,7 +946,7 @@ static int fusb_mdac_comp(int mdac)
     // set mdac to reg_measure bits 0-5 and set bit 6 to measure vbus
     fusb_write(FUSB302_REG_MEASURE, (mdac & FUSB302_MEAS_MDAC_MASK) | FUSB302_MEAS_VBUS);
     fusb_delay_us(350);
-    // Read status0 register, if STATUS0_COMP=1 then vbus is higher than (mdac + 1) * 0.42V
+    // Read status0 register, if STATUS0_COMP=1 then vbus is higher than mdac * 0.42V
     reg = fusb_read(FUSB302_REG_STATUS0);
     // restore original value
     fusb_write(FUSB302_REG_MEASURE, orig_reg);
@@ -951,7 +965,7 @@ static int fusb_measure_vbus_voltage(void)
             mdac |= (1 << i);
         }
     }
-    vbus = (mdac + 1) * 420;
+    vbus = mdac * 420;
     return vbus;
 }
 
@@ -1367,8 +1381,7 @@ static void poll(void)
     if (attached != state.attached) {
         if (attached) {
             state.attached = 1;
-            usart_printf("[%d] - Attach detected: 0x%02X\r\n", system_millis, attached);
-            usart_printf("[%d] - Detecting CC pin...\r\n", system_millis);
+            usart_printf("[%d] - Attach detected\r\n", system_millis);
             int polarity = fusb_check_cc_pin();
             int cc_n = polarity ? 2 : 1;
             usart_printf("[%d] - CC line on CC%d\r\n", system_millis, cc_n);
@@ -1377,12 +1390,12 @@ static void poll(void)
             fusb_set_msg_header(pd.power_role, pd.data_role);
             fusb_set_vconn(state.vconn_enabled);
             fusb_rx_enable(true);
+            fusb_clear_interrupts(true);
             fusb_get_status(false);
         } else {
-            // reading interrupts clears them, so we need a work around to avoid false positives
             // verify device is dettached
             int still_attached = fusb_check_cc_voltage();
-            // if CC voltage is 0, assume device is not attached (some edge cases will be missed)
+            // if CC voltage is 0, assume device is not attached
             if (!still_attached) {
                 usart_printf("[%d] - Dettach detected\r\n", system_millis);
                 // set default state
