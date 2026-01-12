@@ -1022,6 +1022,9 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
     int rv;
     int len;
 
+    if (fusb_rx_empty())
+        return -1;
+
     do {
         buf[0] = FUSB302_REG_FIFOS;
          // Point FIFO read pointer (START, no STOP)
@@ -1333,9 +1336,10 @@ void exti4_15_isr(void) {
         if (int_b & FUSB302_INTB_GCRCSENT) {
             usart_printf("INT: GoodCRC Sent (Packet Received Confirmation).\r\n");
             if (int_c & FUSB302_INT_CRC_CHK) {
+                // read FIFO (for debugging)
+                check_rx_buffer();
                 // I_CRC_CHK bit in INTERRUPT register indicates a received PD message
-                check_rx_messages();
-                dump_rx_messages();
+                check_rx_messages(); // messages can be dumped in the debug cli
             }
         }
         
