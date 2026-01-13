@@ -5,7 +5,8 @@ The [PD Logger](firmware/pd_logger) firmware logs PD messages, attach/dettach ev
 Connect to the board through UART and use a serial terminal to interact with 
 the FUSB302 over I2C via the STM32F0. Logs will start showing once a PD capable device is detected.
 A debug console menu can be accessed by pressing Enter in the terminal allowing direct writes and
-reads to the FUSB302. Press "q" to exit the debug console and return to live logging.
+reads to the FUSB302. Press "q" to exit the debug console and return to live logging. A python script 
+to communicate with the PD Logger over a serial port is included in the firmware folder.
 
 ### Dev Board
 ![DevBoardPreview](assets/pd_board.png)
