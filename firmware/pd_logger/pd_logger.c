@@ -268,7 +268,7 @@ static int i2c_start_write(uint32_t i2c, uint8_t addr, uint8_t nbytes, int flags
     if (flags & I2C_XFER_START) {
         while (I2C_ISR(i2c) & I2C_ISR_BUSY) {
             if (--timeout <= 0)
-                return -1;
+                return 1;
         }
     }
 
@@ -309,7 +309,7 @@ static int i2c_write_byte(uint32_t i2c, uint8_t val)
 
     while (!(I2C_ISR(i2c) & I2C_ISR_TXIS)) {
         if (--timeout <= 0)
-            return -1;
+            return 1;
     }
 
     I2C_TXDR(i2c) = val;
@@ -322,7 +322,7 @@ static int i2c_read_byte(uint32_t i2c, uint8_t *val)
 
     while (!(I2C_ISR(i2c) & I2C_ISR_RXNE)) {
         if (--timeout <= 0)
-            return -1;
+            return 1;
     }
 
     *val = I2C_RXDR(i2c);
@@ -1185,34 +1185,6 @@ static int fusb_transmit(enum tcpc_message_type type, uint16_t header, const uin
     return 0;
 }
 
-static void check_rx_messages(void)
-{
-    uint16_t head;
-    uint32_t payload[7];
-    if (rx_messages_idx >= 50) {
-        // reach limit, reset index
-        rx_messages_idx = 0;
-    }
-    if (fusb_get_message(payload, &head) == 0) {
-        rx_messages[rx_messages_idx].head = head;
-        for (int i = 0; i < 7; i++) {
-            rx_messages[rx_messages_idx].payload[i] = payload[i];
-        }
-        rx_messages_idx += 1;
-    }
-}
-
-static void dump_rx_messages(void)
-{
-    for (int i = 0; i <= rx_messages_idx; i++) {
-        usart_printf("---- RX Message %d ----\r\n", i);
-        usart_printf("Header=0x%04X\r\n", rx_messages[i].head);
-        for (int j = 0; j < 7; j++)
-            usart_printf("Payload[%d]: 0x%08X\r\n", j, rx_messages[i].payload[j]);
-        usart_printf("-----------------------\r\n");
-    }
-}
-
 // function to print status info for debugging
 static void fusb_get_status(bool verbose)
 {
@@ -1291,6 +1263,34 @@ static void fusb_setup(void)
 /* ------------------------------------------------------------
  * PD Helpers
  * ------------------------------------------------------------ */
+
+static void pd_check_rx_messages(void)
+{
+    uint16_t head;
+    uint32_t payload[7];
+    if (rx_messages_idx >= 50) {
+        // reach limit, reset index
+        rx_messages_idx = 0;
+    }
+    if (fusb_get_message(payload, &head) == 0) {
+        rx_messages[rx_messages_idx].head = head;
+        for (int i = 0; i < 7; i++) {
+            rx_messages[rx_messages_idx].payload[i] = payload[i];
+        }
+        rx_messages_idx += 1;
+    }
+}
+
+static void pd_dump_rx_messages(void)
+{
+    for (int i = 0; i <= rx_messages_idx; i++) {
+        usart_printf("---- RX Message %d ----\r\n", i);
+        usart_printf("Header=0x%04X\r\n", rx_messages[i].head);
+        for (int j = 0; j < 7; j++)
+            usart_printf("Payload[%d]: 0x%08X\r\n", j, rx_messages[i].payload[j]);
+        usart_printf("-----------------------\r\n");
+    }
+}
 
 static void pd_init_src(void)
 {
@@ -1388,8 +1388,8 @@ void exti4_15_isr(void) {
                 check_rx_buffer();
 #else
                 // I_CRC_CHK bit in INTERRUPT register indicates a received PD message
-                check_rx_messages();
-                dump_rx_messages();
+                pd_check_rx_messages();
+                pd_dump_rx_messages();
 #endif
             }
         }
@@ -1472,7 +1472,7 @@ static int handle_command(char *line) {
         fusb_get_status(true);
         check_rx_buffer();
     } else if (line[0] == 'c') {
-        dump_rx_messages();
+        pd_dump_rx_messages();
     } else if (line[0] == 'x') {
         char *p = strtok(&line[1], " ");
         if (!p) { usart_printf("usage: x <type> <prole> <drole> <id> <cnt> <rev> <ext>\r\n"); return 0; }
@@ -1560,12 +1560,6 @@ int main(void)
             } 
         }
         poll();
-
-        if (state.attached) {
-            if (state.rx_enable) {
-                check_rx_messages();
-            }
-        }
 
         // small delay to avoid busy looping
         fusb_delay_ms(100);
