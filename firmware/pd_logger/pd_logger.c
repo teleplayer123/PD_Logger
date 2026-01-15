@@ -1195,7 +1195,6 @@ static void fusb_get_status(bool verbose)
         fusb_check_control_regs();
         fusb_check_mask_regs();
     }
-    usart_printf("INT pin=%02X\r\n", gpio_get(GPIOB, GPIO8) ? 1 : 0);
     fusb_current_state();
     int vbus_voltage = fusb_measure_vbus_voltage();
     usart_printf("VBUS Voltage: %d mV\r\n", vbus_voltage);
@@ -1274,7 +1273,8 @@ static void pd_check_rx_messages(void)
     }
     if (fusb_get_message(payload, &head) == 0) {
         rx_messages[rx_messages_idx].head = head;
-        for (int i = 0; i < 7; i++) {
+        int hdr_cnt = PD_HEADER_CNT(head);
+        for (int i = 0; i < hdr_cnt; i++) {
             rx_messages[rx_messages_idx].payload[i] = payload[i];
         }
         rx_messages_idx += 1;
@@ -1286,7 +1286,8 @@ static void pd_dump_rx_messages(void)
     for (int i = 0; i <= rx_messages_idx; i++) {
         usart_printf("---- RX Message %d ----\r\n", i);
         usart_printf("Header=0x%04X\r\n", rx_messages[i].head);
-        for (int j = 0; j < 7; j++)
+        int hdr_cnt = PD_HEADER_CNT(rx_messages[i].head);
+        for (int j = 0; j < hdr_cnt; j++)
             usart_printf("Payload[%d]: 0x%08X\r\n", j, rx_messages[i].payload[j]);
         usart_printf("-----------------------\r\n");
     }
