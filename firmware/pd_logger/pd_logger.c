@@ -1288,6 +1288,10 @@ static void fusb_setup(void)
     fusb_power_all();
 }
 
+/* ------------------------------------------------------------
+ * PD Helpers
+ * ------------------------------------------------------------ */
+
 static void pd_init_src(void)
 {
     pd.power_role = PD_POWER_ROLE_SOURCE;
@@ -1311,6 +1315,49 @@ static void pd_init_snk(void)
     state.vconn_enabled = 0;
     fusb_rx_enable(false);
     fusb_set_rp_default();
+}
+
+static void pd_send_src_caps(void)
+{
+    const uint32_t *src_pdo = pd_src_pdo;
+    const int src_pdo_cnt = pd_src_pdo_cnt;
+    uint16_t header;
+
+    header = PD_HEADER(PD_DATA_SOURCE_CAPABILITIES, pd.power_role,
+        pd.data_role, pd.msg_id, src_pdo_cnt,
+        pd.rev, 0);
+    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, src_pdo);
+    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    pd.msg_id++;
+}
+
+static void pd_send_snk_caps(void)
+{
+    const uint32_t *snk_pdo = pd_snk_pdo;
+    const int snk_pdo_cnt = pd_snk_pdo_cnt;
+    uint16_t header;
+
+    header = PD_HEADER(PD_DATA_SINK_CAPABILITIES, pd.power_role,
+        pd.data_role, pd.msg_id, snk_pdo_cnt,
+        pd.rev, 0);
+    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, snk_pdo);
+    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    pd.msg_id++;
+}
+
+static void pd_send_caps(void)
+{
+    if (!state.tx_sent) {
+        if (state.pulling_up) {
+            fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
+            pd_send_src_caps();
+            state.tx_sent = 1;
+        } else {
+            fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
+            pd_send_snk_caps();
+            state.tx_sent = 1;
+        }
+    }
 }
 
 /* ------------------------------------------------------------
@@ -1363,49 +1410,6 @@ void exti4_15_isr(void) {
 /* ------------------------------------------------------------
  * Main Program Functions
  * ------------------------------------------------------------ */
-
-static void pd_send_src_caps(void)
-{
-    const uint32_t *src_pdo = pd_src_pdo;
-    const int src_pdo_cnt = pd_src_pdo_cnt;
-    uint16_t header;
-
-    header = PD_HEADER(PD_DATA_SOURCE_CAPABILITIES, pd.power_role,
-        pd.data_role, pd.msg_id, src_pdo_cnt,
-        pd.rev, 0);
-    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, src_pdo);
-    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
-    pd.msg_id++;
-}
-
-static void pd_send_snk_caps(void)
-{
-    const uint32_t *snk_pdo = pd_snk_pdo;
-    const int snk_pdo_cnt = pd_snk_pdo_cnt;
-    uint16_t header;
-
-    header = PD_HEADER(PD_DATA_SINK_CAPABILITIES, pd.power_role,
-        pd.data_role, pd.msg_id, snk_pdo_cnt,
-        pd.rev, 0);
-    fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, snk_pdo);
-    usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
-    pd.msg_id++;
-}
-
-static void pd_send_caps(void)
-{
-    if (!state.tx_sent) {
-        if (state.pulling_up) {
-            fusb_set_msg_header(PD_POWER_ROLE_SOURCE, PD_DATA_ROLE_DFP);
-            pd_send_src_caps();
-            state.tx_sent = 1;
-        } else {
-            fusb_set_msg_header(PD_POWER_ROLE_SINK, PD_DATA_ROLE_UFP);
-            pd_send_snk_caps();
-            state.tx_sent = 1;
-        }
-    }
-}
 
 // poll function to get/set changes in state
 static void poll(void)
