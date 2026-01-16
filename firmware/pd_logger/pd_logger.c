@@ -19,6 +19,75 @@
  * Globals
  * ------------------------------------------------------------ */
 
+/*
+void pd_parse_message(uint8_t *msg) {
+    // 1. Extract the 16-bit Message Header (LSB first) [1, 2]
+    uint16_t header = (uint16_t)msg | ((uint16_t)msg[3] << 8);
+
+    // 2. Decode Header Fields [1, 4]
+    bool is_extended = (header >> 15) & 0x01;             // Bit 15: Extended [4, 5]
+    uint8_t num_obj   = (header >> 12) & 0x07;            // Bits 14..12: Number of Data Objects [6]
+    uint8_t msg_id    = (header >> 9)  & 0x07;            // Bits 11..9: MessageID [7]
+    uint8_t pwr_role  = (header >> 8)  & 0x01;            // Bit 8: Port Power Role (0=Sink, 1=Source) [8]
+    uint8_t rev       = (header >> 6)  & 0x03;            // Bits 7..6: Specification Revision [9]
+    uint8_t data_role = (header >> 5)  & 0x01;            // Bit 5: Port Data Role (0=UFP, 1=DFP) [10]
+    uint8_t msg_type  = header & 0x1F;                    // Bits 4..0: Message Type [11]
+
+    // 3. Print General Header Info
+    printf("--- USB PD Message ---\n");
+    printf("ID: %d | Rev: %s | %s | %s\n", 
+            msg_id, 
+            (rev == 0x01) ? "2.0" : (rev == 0x02) ? "3.x" : "Unknown", 
+            (pwr_role == 1) ? "Source" : "Sink", 
+            (data_role == 1) ? "DFP" : "UFP");
+
+    // 4. Identify Message Type [12, 13]
+    if (is_extended) {
+        // Extended Message Handling [5, 14, 15]
+        uint16_t ext_header = (uint16_t)msg[16] | ((uint16_t)msg[17] << 8);
+        uint16_t data_size = ext_header & 0x1FF;
+        printf("Type: EXTENDED (0x%02X) | Size: %d bytes\n", msg_type, data_size);
+        
+    } else if (num_obj == 0) {
+        // Control Message Parsing (Num Objects = 0) [18, 19]
+        const char* type_str = "Reserved";
+        switch(msg_type) {
+            case 0x01: type_str = "GoodCRC"; break;       // [19, 20]
+            case 0x03: type_str = "Accept"; break;        // [19, 21]
+            case 0x04: type_str = "Reject"; break;        // [19, 22]
+            case 0x06: type_str = "PS_RDY"; break;        // [19, 23]
+            case 0x07: type_str = "Get_Source_Cap"; break;// [19, 23]
+            case 0x09: type_str = "DR_Swap"; break;       // [19, 24]
+            case 0x0A: type_str = "PR_Swap"; break;       // [19, 25]
+            case 0x0D: type_str = "Soft_Reset"; break;    // [19, 26]
+            case 0x10: type_str = "Not_Supported"; break; // [19, 27]
+        }
+        printf("Type: CONTROL | %s\n", type_str);
+
+    } else {
+        // Data Message Parsing (Num Objects > 0) [13, 28]
+        const char* type_str = "Reserved";
+        switch(msg_type) {
+            case 0x01: type_str = "Source_Capabilities"; break; // [13, 29]
+            case 0x02: type_str = "Request"; break;             // [13, 30]
+            case 0x04: type_str = "Sink_Capabilities"; break;   // [13, 31]
+            case 0x0F: type_str = "Vendor_Defined"; break;      // [13, 32]
+        }
+        printf("Type: DATA | %s | Objects: %d\n", type_str, num_obj);
+
+        // 5. Briefly parse Data Objects (32-bit each) [33, 34]
+        for (int i = 0; i < num_obj; i++) {
+            uint32_t obj = (uint32_t)msg[2 + i*4]         | 
+                          ((uint32_t)msg[3 + i*4] << 8)   |
+                          ((uint32_t)msg[4 + i*4] << 16)  |
+                          ((uint32_t)msg[5 + i*4] << 24);
+            printf("  OBJ[%d]: 0x%08X\n", i + 1, obj);
+        }
+    }
+    printf("----------------------\n");
+}
+*/
+
 //#define DEBUG_DUMP
 #define I2C_TIMEOUT 100000
 
@@ -1565,4 +1634,5 @@ int main(void)
         // small delay to avoid busy looping
         fusb_delay_ms(100);
     }
+
 }
