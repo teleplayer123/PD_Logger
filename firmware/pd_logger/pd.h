@@ -20,16 +20,18 @@
 * @param ext: 1 bit Extended Message Indicator (0 = Control Message, 1 = Data Message) 			[Bit 15]
 */
 #define PD_HEADER(type, prole, drole, id, cnt, rev, ext) \
-	((type) | ((rev) << 6) | \
-	((drole) << 5) | ((prole) << 8) | \
-	((id) << 9) | ((cnt) << 12) | ((ext) << 15))
+	((type) | ((rev) << 0x06) | \
+	((drole) << 0x05) | ((prole) << 0x08) | \
+	((id) << 0x09) | ((cnt) << 0x0C) | ((ext) << 0x0F))
 
 // Process PD headers
-#define PD_HEADER_EXT(h)  (((h) >> 15) & 1)
-#define PD_HEADER_CNT(h)  (((h) >> 12) & 7)
-#define PD_HEADER_TYPE(h) ((h) & 0x1F)
-#define PD_HEADER_ID(h)   (((h) >> 9) & 7)
-#define PD_HEADER_REV(h)  (((h) >> 6) & 3)
+#define PD_HEADER_EXT(h)  	(((h) >> 0x0F) & 0x01)
+#define PD_HEADER_CNT(h)  	(((h) >> 0x0C) & 0x07)
+#define PD_HEADER_TYPE(h) 	((h) & 0x1F)
+#define PD_HEADER_ID(h)   	(((h) >> 0x09) & 0x07)
+#define PD_HEADER_REV(h)  	(((h) >> 0x06) & 0x03)
+#define PD_HEADER_PROLE(h)	(((h) >> 0x08) & 0x01)
+#define PD_HEADER_DROLE(h)	(((h) >> 0x05) & 0x01)
 
 #define PD_SRC_DEF_MV               1600
 #define PD_SRC_DEF_RD_MV            200
