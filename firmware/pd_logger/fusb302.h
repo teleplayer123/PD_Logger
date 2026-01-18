@@ -289,13 +289,12 @@ enum fusb302_fifo_tokens {
     FUSB302_TKN_TXOFF = 0xFE,
 };
 
-// fisrt byte of received packet
 enum fusb302_fifo_rx_tokens {
-    FUSB302_RX_TKN_SOP = 0x07,
-    FUSB302_RX_TKN_SOP1 = 0x06,
-    FUSB302_RX_TKN_SOP2 = 0x05,
-    FUSB302_RX_TKN_SOP1DB = 0x04,
-    FUSB302_RX_TKN_SOP2DB = 0x03,
+    FUSB302_RX_TKN_SOP = 0xE0,
+    FUSB302_RX_TKN_SOP1 = 0xC0,
+    FUSB302_RX_TKN_SOP2 = 0xA0,
+    FUSB302_RX_TKN_SOP1DB = 0x80,
+    FUSB302_RX_TKN_SOP2DB = 0x60,
 };
 
 /* -----------------------------------------------------------
