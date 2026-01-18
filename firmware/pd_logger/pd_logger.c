@@ -1366,7 +1366,7 @@ RDO Bit Mapping:
 19-10	Operating Current: Current the sink will actually draw (10mA units).
 9-0		Max Operating Current: Max current if GiveBack is 0 (10mA units)
 */
-static void pd_parse_rdo(uint32_t rdo) {
+static void pd_log_request(uint32_t rdo) {
     uint8_t obj_pos = (rdo >> 28) & 0x07;
     uint32_t op_current = ((rdo >> 10) & 0x3FF) * 10; // 10mA units
     uint32_t max_current = (rdo & 0x3FF) * 10;        // 10mA units
@@ -1386,18 +1386,6 @@ static void pd_parse_rdo(uint32_t rdo) {
     if (mismatch) {
         usart_printf("\tCapability Mismatch Flag SET!!!\r\n");
     }
-}
-
-static void pd_log_request(uint32_t rdo)
-{
-    int obj_pos = (rdo >> 28) & 0x7;
-    int op_ma   = (rdo & 0x3FF) * 10;
-    int max_ma  = ((rdo >> 10) & 0x3FF) * 10;
-
-    usart_printf("RDO:\r\n");
-    usart_printf("\tObject: %d\r\n", obj_pos);
-    usart_printf("\tOper: %dmA\r\n", op_ma);
-    usart_printf("\tMax: %dmA\r\n", max_ma);
 }
 
 static void pd_check_rx_messages(void)
