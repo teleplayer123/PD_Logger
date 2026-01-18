@@ -1355,6 +1355,39 @@ static void pd_log_source_caps(const uint32_t *pdo, int count)
     }
 }
 
+/*
+RDO Bit Mapping:
+31-28 	Object Position: The index (1-7) of the PDO the sink is requesting.
+27 		GiveBack: If 1, the sink will reduce power is source asks.
+26		Capability Mismatch: If 1, the sink is requesting something source did not offer.
+25		USB Comm Capable: If 1, the sink supports USB data communication.
+24		No USB Suspend: If 1, the sink wants to stayed powered during USB suspend.
+23		Unchunked Support: (PD 3.0) Supports large messages.
+19-10	Operating Current: Current the sink will actually draw (10mA units).
+9-0		Max Operating Current: Max current if GiveBack is 0 (10mA units)
+*/
+static void pd_parse_rdo(uint32_t rdo) {
+    uint8_t obj_pos = (rdo >> 28) & 0x07;
+    uint32_t op_current = ((rdo >> 10) & 0x3FF) * 10; // 10mA units
+    uint32_t max_current = (rdo & 0x3FF) * 10;        // 10mA units
+    
+    bool giveback = (rdo >> 27) & 0x01;
+    bool mismatch = (rdo >> 26) & 0x01;
+
+    usart_printf("\tRequested PDO #%d\r\n", obj_pos);
+    usart_printf("\tOperating Current: %dmA\r\n", op_current);
+    
+    if (giveback) {
+        usart_printf("\tGiveBack Flag: SET (Min Current: %dmA)\r\n", max_current);
+    } else {
+        usart_printf("\tMax Current: %dmA\r\n", max_current);
+    }
+
+    if (mismatch) {
+        usart_printf("\tCapability Mismatch Flag SET!!!\r\n");
+    }
+}
+
 static void pd_log_request(uint32_t rdo)
 {
     int obj_pos = (rdo >> 28) & 0x7;
@@ -1689,3 +1722,4 @@ int main(void)
     }
 
 }
+
