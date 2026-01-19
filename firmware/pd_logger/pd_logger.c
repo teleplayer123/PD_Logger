@@ -1497,7 +1497,7 @@ static void pd_send_src_caps(void)
         pd.rev, 0);
     fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, src_pdo);
     usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
-    pd.msg_id++;
+    pd.msg_id = (pd.msg_id + 1) & 0x07;
 }
 
 static void pd_send_snk_caps(void)
@@ -1511,7 +1511,7 @@ static void pd_send_snk_caps(void)
         pd.rev, 0);
     fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, snk_pdo);
     usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
-    pd.msg_id++;
+    pd.msg_id = (pd.msg_id + 1) & 0x07;
 }
 
 static void pd_send_caps(void)
