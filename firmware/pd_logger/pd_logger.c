@@ -598,9 +598,11 @@ static int fusb_int_vbusok(void)
 
 static void fusb_send_hard_reset(void)
 {
+    fusb_flush_rx_fifo();
     uint8_t reg = fusb_read(FUSB302_REG_CONTROL3);
     reg |= FUSB302_CTL3_SEND_HARDRESET;
     fusb_write(FUSB302_REG_CONTROL3, reg);
+    pd.msg_id = 0;
 }
 
 static void fusb_set_rp_default(void)
@@ -1380,6 +1382,7 @@ static void pd_log_request(uint32_t rdo) {
     
     bool giveback = (rdo >> 27) & 0x01;
     bool mismatch = (rdo >> 26) & 0x01;
+    bool usb_capable = (rdo >> 25) & 0x01;
 
     usart_printf("\tRequested PDO #%d\r\n", obj_pos);
     usart_printf("\tOperating Current: %dmA\r\n", op_current);
@@ -1392,6 +1395,12 @@ static void pd_log_request(uint32_t rdo) {
 
     if (mismatch) {
         usart_printf("\tCapability Mismatch Flag SET!!!\r\n");
+    }
+
+    if (usb_capable) {
+        usart_printf("\tUSB data communication supported\r\n");
+    } else {
+        usart_printf("\tUSB data communication NOT supported\r\n");
     }
 }
 
@@ -1468,6 +1477,15 @@ static void pd_init_snk(void)
     fusb_set_rp_default();
 }
 
+static void pd_init(int pull)
+{
+    if (pull) {
+        pd_init_src();
+    } else {
+        pd_init_snk();
+    }
+}
+
 static void pd_send_src_caps(void)
 {
     const uint32_t *src_pdo = pd_src_pdo;
@@ -1529,6 +1547,7 @@ void exti4_15_isr(void) {
             // Hard reset requires clearing state and re-initializing fusb302
             fusb_reset();
             fusb_setup();
+            pd_init(state.pulling_up);
         }
 
         // Received a soft reset packet
@@ -1708,7 +1727,8 @@ int main(void)
     exti_setup(); 
 
     fusb_setup();
-    pd_init_snk();
+    // initialize as sink
+    pd_init(0);
 
     while (1) {
         if (usart_rx_ready()) {
