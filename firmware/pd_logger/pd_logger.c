@@ -596,6 +596,13 @@ static int fusb_int_vbusok(void)
     }
 }
 
+static void fusb_send_hard_reset(void)
+{
+    uint8_t reg = fusb_read(FUSB302_REG_CONTROL3);
+    reg |= FUSB302_CTL3_SEND_HARDRESET;
+    fusb_write(FUSB302_REG_CONTROL3, reg);
+}
+
 static void fusb_set_rp_default(void)
 {
     uint8_t reg;
@@ -1516,12 +1523,19 @@ void exti4_15_isr(void) {
         uint8_t int_b = fusb_read(FUSB302_REG_INTERRUPTB);
         uint8_t int_c = fusb_read(FUSB302_REG_INTERRUPT);
 
-        // Hard Reset Received / Sent 
+        // Hard reset ordered set received
         if (int_a & FUSB302_INTA_HARDRST) {
-            usart_printf("INT: Hard Reset Detected.\r\n");
-            // Hard Reset requires clearing state and re-initializing fusb302
+            usart_printf("INT: Hard Reset Received.\r\n");
+            // Hard reset requires clearing state and re-initializing fusb302
             fusb_reset();
             fusb_setup();
+        }
+
+        // Received a soft reset packet
+        if (int_a & FUSB302_INTA_SOFTRST) {
+            usart_printf("INT: Soft Reset Received.\r\n");
+            // Soft reset
+            fusb_pd_reset();
         }
 
         // A received message is confirmed when GoodCRC is sent (GCRCSENT)
@@ -1542,8 +1556,9 @@ void exti4_15_isr(void) {
         if (int_c & FUSB302_INT_COMP_CHNG) {
             uint8_t status0 = fusb_read(FUSB302_REG_STATUS0);
             uint8_t bc_lvl = (status0 & FUSB302_STATUS0_BC_LVL_MASK) >> FUSB302_STATUS0_BC_LVL_POS;
-            usart_printf("INT: CC Change (BC_LVL=0x%02X) Status0: 0x%02X\r\n", bc_lvl, status0);
+            usart_printf("INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x%02X)\r\n", bc_lvl);
         }
+
         // Clear interrupts
         fusb_clear_interrupts();
         // Clear the EXTI
