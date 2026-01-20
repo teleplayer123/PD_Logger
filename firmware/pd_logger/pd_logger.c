@@ -1334,7 +1334,6 @@ static void pd_log_header(uint16_t header)
     uint8_t id = PD_HEADER_ID(header);
     uint8_t type = PD_HEADER_TYPE(header);
     uint8_t rev = PD_HEADER_REV(header);
-    //uint8_t ext = PD_HEADER_EXT(header);
 
     usart_printf("PD Rx Header: 0x%04X\r\n", header);
     usart_printf("\tMsgID: 0x%02X\r\n", id);
@@ -1342,9 +1341,9 @@ static void pd_log_header(uint16_t header)
     usart_printf("\tCount: %d\r\n", cnt);
 
     if (cnt > 0)
-        usart_printf("\tType: %s\r\n", pd_ctrl_msg_name(type));
-    else
         usart_printf("\tType: %s\r\n", pd_data_msg_name(type));
+    else
+        usart_printf("\tType: %s\r\n", pd_ctl_msg_name(type));
 }
 
 static void pd_log_source_caps(const uint32_t *pdo, int count)
