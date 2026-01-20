@@ -60,7 +60,11 @@ static struct pd_protocol {
 static struct pd_rx_messages {
     uint16_t head;
     uint32_t payload[7];
-} rx_messages[50];
+} rx_messages[10];
+
+static struct pd_rx_fifo_buffer {
+    uint8_t buffer[80];
+} rx_buffers[10];
 
 // counter for rx_messages index
 int rx_messages_idx = 0;
@@ -449,6 +453,13 @@ static void fusb_check_mask_regs(void)
     reg = fusb_read(FUSB302_REG_MASKB);
     dump_bits(reg, fusb302_maskb_bits);
     usart_printf("\r\n");
+}
+
+static void save_rx_buffer(int msg_idx)
+{
+    uint8_t buffer[80];
+    fusb_read_fifo(buffer, 80);
+    memcpy(rx_buffers[msg_idx].buffer, buffer, 80);
 }
 
 static void check_rx_buffer(void)
@@ -1407,7 +1418,7 @@ static void pd_check_rx_messages(void)
 {
     uint16_t head;
     uint32_t payload[7];
-    if (rx_messages_idx >= 50) {
+    if (rx_messages_idx >= 9) {
         // reach limit, reset index
         rx_messages_idx = 0;
     }
@@ -1417,11 +1428,17 @@ static void pd_check_rx_messages(void)
         for (int i = 0; i < hdr_cnt; i++) {
             rx_messages[rx_messages_idx].payload[i] = payload[i];
         }
+
+        // save entire fifo buffer
+        save_rx_buffer(rx_messages_idx);
+
         rx_messages_idx += 1;
+        // flush fifo for good measure
+        fusb_flush_rx_fifo();
     }
 }
 
-static void pd_dump_rx_messages(void)
+static void pd_dump_rx_messages(bool verbose)
 {
     for (int i = 0; i < rx_messages_idx; i++) {
         usart_printf("---- RX Message %d ----\r\n", i);
@@ -1447,6 +1464,10 @@ static void pd_dump_rx_messages(void)
                 break;
         }
 
+        if (verbose) {
+            // hexdump saved fifo buffer
+            hexdump(rx_buffers[i].buffer, 80);
+        }
         usart_printf("-----------------------\r\n");
     }
 }
@@ -1572,7 +1593,7 @@ void exti4_15_isr(void) {
 #else
                 // I_CRC_CHK bit in INTERRUPT register indicates a received PD message
                 pd_check_rx_messages();
-                pd_dump_rx_messages();
+                pd_dump_rx_messages(false);
 #endif
             }
         }
@@ -1618,9 +1639,11 @@ static void poll(void)
             // if CC voltage is 0, assume device is not attached
             if (!still_attached) {
                 usart_printf("[%d] - Dettach detected\r\n", system_millis);
+                // reset fusb302
+                fusb_reset();
                 // set default state
+                fusb_setup();
                 pd_init(0);
-                fusb_pd_reset();
             }
         }
     }
@@ -1648,9 +1671,8 @@ static int handle_command(char *line) {
         print_byte_as_bits(val, reg);
     } else if (line[0] == 's') {
         fusb_get_status(true);
-        check_rx_buffer();
     } else if (line[0] == 'c') {
-        pd_dump_rx_messages();
+        pd_dump_rx_messages(true);
     } else if (line[0] == 'x') {
         char *p = strtok(&line[1], " ");
         if (!p) { usart_printf("usage: x <type> <prole> <drole> <id> <cnt> <rev> <ext>\r\n"); return 0; }
