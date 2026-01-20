@@ -1,6 +1,6 @@
-[1375960] - Attach detected
-[1375966] - CC line on CC1
-[1375977] --- Status Update ---
+[226108] - Attach detected
+[226114] - CC line on CC1
+[226125] --- Status Update ---
 ---- Current FUSB302 State ----
 CC Polarity: 0
 VCONN Enabled: 0
@@ -12,7 +12,7 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[1376070] --- End Status Update ---
+[226218] --- End Status Update ---
 INT: GoodCRC Sent (Packet Received)
 ---- RX Message 0 ----
 PD Rx Header: 0x41A1
@@ -21,26 +21,19 @@ PD Rx Header: 0x41A1
 	Count: 4
 	Type: Source_Capabilities
 	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 3200mV @ 0mA
-	PDO3: Fixed 0mV @ 230mA
-	PDO4: Fixed 250mV @ 9030mA
------------------------
----- RX Message 1 ----
-PD Rx Header: 0x41A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 4
-	Type: Source_Capabilities
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 6400mV @ 0mA
-	PDO3: Fixed 6400mV @ 680mA
-	PDO4: Fixed 0mV @ 0mA
+	PDO2: Fixed 0mV @ 490mA
+	PDO3: Fixed 0mV @ 0mA
+	PDO4: Fixed 0mV @ 3030mA
+Payload[0]: 0x0041A1E0
+Payload[1]: 0x00000031
+Payload[2]: 0x00000000
+Payload[3]: 0x0800012F
 -----------------------
 INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
 Logging paused. Entering debug menu...
 ---- PD Logger Debug Console ----
 s
-[1384588] --- Status Update ---
+[239017] --- Status Update ---
 ---- STATUS0 ----
 VBUSOK = 1
 ACTIVITY = 0
@@ -164,7 +157,7 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[1384813] --- End Status Update ---
+[239242] --- End Status Update ---
 > c
 ---- RX Message 0 ----
 PD Rx Header: 0x41A1
@@ -173,31 +166,14 @@ PD Rx Header: 0x41A1
 	Count: 4
 	Type: Source_Capabilities
 	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 3200mV @ 0mA
-	PDO3: Fixed 0mV @ 230mA
-	PDO4: Fixed 250mV @ 9030mA
-0000: 2C 91 01 0A 2C D1 02 00 2C B1 04 00 2C 41 06 00  | ,...,...,...,A..
-0010: 80 42 64 AC 00 00 00 00 00 00 00 00 00 00 00 00  | .Bd.............
-0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
-0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
-0040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
------------------------
----- RX Message 1 ----
-PD Rx Header: 0x41A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 4
-	Type: Source_Capabilities
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 6400mV @ 0mA
-	PDO3: Fixed 6400mV @ 680mA
-	PDO4: Fixed 0mV @ 0mA
-0000: 2C 91 01 0A 2C D1 02 00 2C B1 04 00 2C 41 06 00  | ,...,...,...,A..
-0010: 80 42 64 AC 00 00 00 00 00 00 00 00 00 00 00 00  | .Bd.............
-0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
-0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
-0040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+	PDO2: Fixed 0mV @ 490mA
+	PDO3: Fixed 0mV @ 0mA
+	PDO4: Fixed 0mV @ 3030mA
+Payload[0]: 0x0041A1E0
+Payload[1]: 0x00000031
+Payload[2]: 0x00000000
+Payload[3]: 0x0800012F
 -----------------------
 > q
 Returning to live logging...
-[1397883] - Dettach detected
+[246898] - Dettach detected

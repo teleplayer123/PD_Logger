@@ -62,9 +62,11 @@ static struct pd_rx_messages {
     uint32_t payload[7];
 } rx_messages[10];
 
+#ifdef DEBUG_DUMP
 static struct pd_rx_fifo_buffer {
     uint8_t buffer[80];
 } rx_buffers[10];
+#endif
 
 // counter for rx_messages index
 int rx_messages_idx = 0;
@@ -455,12 +457,14 @@ static void fusb_check_mask_regs(void)
     usart_printf("\r\n");
 }
 
+#ifdef DEBUG_DUMP
 static void save_rx_buffer(int msg_idx)
 {
     uint8_t buffer[80];
     fusb_read_fifo(buffer, 80);
     memcpy(rx_buffers[msg_idx].buffer, buffer, 80);
 }
+#endif
 
 static void check_rx_buffer(void)
 {
@@ -1428,9 +1432,10 @@ static void pd_check_rx_messages(void)
         for (int i = 0; i < hdr_cnt; i++) {
             rx_messages[rx_messages_idx].payload[i] = payload[i];
         }
-
+#ifdef DEBUG_DUMP
         // save entire fifo buffer
         save_rx_buffer(rx_messages_idx);
+#endif
 
         rx_messages_idx += 1;
         // flush fifo for good measure
@@ -1453,6 +1458,8 @@ static void pd_dump_rx_messages(bool verbose)
             case 0x01:
                 // source capabilities
                 pd_log_source_caps(rx_messages[i].payload, cnt);
+                for (int j = 0; j < cnt; j++)
+                    usart_printf("Payload[%d]: 0x%08X\r\n", j, rx_messages[i].payload[j]);
                 break;
             case 0x02:
                 // request
@@ -1465,8 +1472,10 @@ static void pd_dump_rx_messages(bool verbose)
         }
 
         if (verbose) {
+#ifdef DEBUG_DUMP
             // hexdump saved fifo buffer
             hexdump(rx_buffers[i].buffer, 80);
+#endif
         }
         usart_printf("-----------------------\r\n");
     }
@@ -1588,13 +1597,9 @@ void exti4_15_isr(void) {
         if (int_b & FUSB302_INTB_GCRCSENT) {
             usart_printf("INT: GoodCRC Sent (Packet Received)\r\n");
             if (int_c & FUSB302_INT_CRC_CHK) {
-#ifdef DEBUG_DUMP
-                check_rx_buffer();
-#else
                 // I_CRC_CHK bit in INTERRUPT register indicates a received PD message
                 pd_check_rx_messages();
                 pd_dump_rx_messages(false);
-#endif
             }
         }
         
