@@ -1,6 +1,6 @@
-[23108] - Attach detected
-[23114] - CC line on CC2
-[23125] --- Status Update ---
+[39208] - Attach detected
+[39214] - CC line on CC2
+[39225] --- Status Update ---
 ---- Current FUSB302 State ----
 CC Polarity: 1
 VCONN Enabled: 0
@@ -12,21 +12,105 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[23218] --- End Status Update ---
+[39318] --- End Status Update ---
 INT: GoodCRC Sent (Packet Received)
 ---- RX Message 0 ----
-PD Rx Header: 0x51A1
+PD Rx Header: 0x108F
 	MsgID: 0x00
 	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 100mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
 -----------------------
 ---- RX Message 1 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
+INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
+INT: Hard Reset Received.
+[40020] - Attach detected
+[40026] - CC line on CC2
+[40037] --- Status Update ---
+---- Current FUSB302 State ----
+CC Polarity: 1
+VCONN Enabled: 0
+Pulling Down (UFP): 0
+RX Enable: 1
+MDAC VNC: 0x26
+MDAC RD: 0x05
+Device Attached: True
+---- End State ----
+VBUS Voltage: 420 mV
+CC voltage: 2688 mV
+[40130] --- End Status Update ---
+INT: GoodCRC Sent (Packet Received)
+---- RX Message 0 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
+INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
+INT: Hard Reset Received.
+[40832] - Attach detected
+[40838] - CC line on CC2
+[40849] --- Status Update ---
+---- Current FUSB302 State ----
+CC Polarity: 1
+VCONN Enabled: 0
+Pulling Down (UFP): 0
+RX Enable: 1
+MDAC VNC: 0x26
+MDAC RD: 0x05
+Device Attached: True
+---- End State ----
+VBUS Voltage: 420 mV
+CC voltage: 2688 mV
+[40942] --- End Status Update ---
+INT: GoodCRC Sent (Packet Received)
+---- RX Message 0 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 3 ----
 PD Rx Header: 0x0000
 	MsgID: 0x00
 	Rev: PD1.0
@@ -36,7 +120,7 @@ INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
 Logging paused. Entering debug menu...
 ---- PD Logger Debug Console ----
 s
-[30810] --- Status Update ---
+[63532] --- Status Update ---
 ---- STATUS0 ----
 VBUSOK = 1
 ACTIVITY = 0
@@ -159,27 +243,39 @@ MDAC RD: 0x05
 Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
-CC voltage: 420 mV
-[30986] --- End Status Update ---
-0000: 2C 91 01 0A 2C D1 02 00 F4 C1 03 00 B1 B1 04 00  | ,...,...........
-0010: 45 41 06 00 11 BB A3 7A 00 00 00 00 00 00 00 00  | EA.....z........
-0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+CC voltage: 2688 mV
+[63756] --- End Status Update ---
+0000: 01 A0 00 FF A4 45 02 72 C0 4F 12 01 80 00 FF 90  | .....E.r.O......
+0010: 4E 67 21 E0 A1 51 2C 91 01 08 2C D1 02 00 2C B1  | Ng!..Q,...,...,.
+0020: 04 00 2C 41 06 00 3C 21 DC C0 AF D0 B1 CB 00 00  | ..,A..<!........
 0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
 0040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
 > c
 ---- RX Message 0 ----
-PD Rx Header: 0x51A1
+PD Rx Header: 0x108F
 	MsgID: 0x00
 	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 100mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
 -----------------------
 ---- RX Message 1 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 3 ----
 PD Rx Header: 0x0000
 	MsgID: 0x00
 	Rev: PD1.0
@@ -187,10 +283,250 @@ PD Rx Header: 0x0000
 	Type: Invalid
 > q
 Returning to live logging...
-[40355] - Dettach detected
-[44563] - Attach detected
-[44569] - CC line on CC1
-[44580] --- Status Update ---
+[81803] - Dettach detected
+[87411] - Attach detected
+[87417] - CC line on CC1
+[87428] --- Status Update ---
+---- Current FUSB302 State ----
+CC Polarity: 0
+VCONN Enabled: 0
+Pulling Down (UFP): 0
+RX Enable: 1
+MDAC VNC: 0x26
+MDAC RD: 0x05
+Device Attached: True
+---- End State ----
+VBUS Voltage: 5040 mV
+CC INT: GoodCRC Sent (Packet Received)
+---- RX Message 0 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 3 ----
+PD Rx Header: 0x59A1
+	MsgID: 0x04
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 30800mV @ 4800mA
+	PDO2: Fixed 50mV @ 10230mA
+	PDO3: Fixed 0mV @ 5200mA
+	PDO4: Fixed 650mV @ 7920mA
+	PDO5: Fixed 0mV @ 80mA
+-----------------------
+---- RX Message 4 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
+INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
+voltage: 168 mV
+[87467] --- End Status Update ---
+Logging paused. Entering debug menu...
+---- PD Logger Debug Console ----
+s
+[95502] --- Status Update ---
+---- STATUS0 ----
+VBUSOK = 1
+ACTIVITY = 0
+COMP = 0
+CRC_CHK = 0
+ALERT = 0
+WAKE = 0
+BC_LVL1 = 1
+BC_LVL0 = 1
+
+---- STATUS1 ----
+RXSOP2 = 0
+RXSOP1 = 0
+RX_EMPTY = 0
+RX_FULL = 0
+TX_EMPTY = 1
+TX_FULL = 0
+OVRTEMP = 0
+OCP = 0
+
+---- STATUS0A ----
+SOFTFAIL = 0
+RETRYFAIL = 0
+POWER3 = 1
+POWER2 = 1
+SOFTRST = 0
+HARDRST = 1
+
+---- STATUS1A ----
+TOGSS3 = 0
+TOGSS2 = 0
+TOGSS1 = 0
+RXSOP2DB = 0
+RXSOP1DB = 0
+RXSOP = 1
+
+---- SWITCHES0 ----
+PU_EN2 = 0
+PU_EN1 = 0
+VCONN_CC2 = 0
+VCONN_CC1 = 0
+MEAS_CC2 = 0
+MEAS_CC1 = 1
+PDWN2 = 1
+PDWN1 = 1
+
+---- SWITCHES1 ----
+POWERROLE = 0
+SPECREV1 = 0
+SPECREV0 = 1
+DATAROLE = 0
+AUTO_GCRC = 1
+TXCC2 = 0
+TXCC1 = 1
+
+---- CONTROL0 ----
+TX_FLUSH = 0
+INT_MASK = 0
+HOST_CUR1 = 0
+HOST_CUR0 = 1
+AUTO_PRE = 0
+TX_START = 0
+
+---- CONTROL1 ----
+ENSOP2DB = 1
+ENSOP1DB = 1
+BIST_MODE2 = 0
+RX_FLUSH = 0
+ENSOP2 = 1
+ENSOP1 = 1
+
+---- CONTROL2 ----
+TOG_SAVE_PWR2 = 0
+TOG_SAVE_PWR1 = 0
+TOG_RD_ONLY = 0
+WAKE_EN = 0
+MODE_1 = 0
+MODE_0 = 1
+TOGGLE = 0
+
+---- CONTROL3 ----
+SEND_HARDRESET = 0
+BIST_TMODE = 0
+AUTO_HARDRESET = 0
+AUTO_SOFTRESET = 0
+NRETRIES1 = 1
+NRETRIES0 = 1
+AUTO_RETRY = 1
+
+---- MASK ----
+VBUSOK = 1
+ACTIVITY = 1
+COMP_CHNG = 1
+CRC_CHK = 0
+ALERT = 0
+WAKE = 1
+COLLISION = 0
+BC_LVL = 1
+
+---- MASKA ----
+OCP_TEMP = 1
+TOGDONE = 1
+SOFTFAIL = 1
+RETRYFAIL = 0
+HARDSENT = 0
+TXSENT = 0
+SOFTRST = 1
+HARDRST = 0
+
+---- MASKB ----
+GCRCSENT = 0
+
+---- Current FUSB302 State ----
+CC Polarity: 0
+VCONN Enabled: 0
+Pulling Down (UFP): 0
+RX Enable: 1
+MDAC VNC: 0x26
+MDAC RD: 0x05
+Device Attached: True
+---- End State ----
+VBUS Voltage: 5040 mV
+CC voltage: 546 mV
+[95681] --- End Status Update ---
+0000: 2C 91 01 08 2C D1 02 00 2C B1 04 00 45 41 06 00  | ,...,...,...EA..
+0010: 64 21 DC C0 04 45 5E 2F 00 00 00 00 00 00 00 00  | d!...E^/........
+0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+0040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+> c
+---- RX Message 0 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x108F
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 1
+	Type: Vendor_Defined
+Payload[0]: 0x00108FC0
+-----------------------
+---- RX Message 3 ----
+PD Rx Header: 0x59A1
+	MsgID: 0x04
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 30800mV @ 4800mA
+	PDO2: Fixed 50mV @ 10230mA
+	PDO3: Fixed 0mV @ 5200mA
+	PDO4: Fixed 650mV @ 7920mA
+	PDO5: Fixed 0mV @ 80mA
+-----------------------
+---- RX Message 4 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
+> q
+Returning to live logging...
+[114582] - Dettach detected
+[187390] - Attach detected
+[187396] - CC line on CC2
+[4908] - Attach detected
+[4914] - CC line on CC1
+[4924] --- Status Update ---
 ---- Current FUSB302 State ----
 CC Polarity: 0
 VCONN Enabled: 0
@@ -202,33 +538,21 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[44673] --- End Status Update ---
+[5018] --- End Status Update ---
 INT: GoodCRC Sent (Packet Received)
 ---- RX Message 0 ----
 PD Rx Header: 0x51A1
 	MsgID: 0x00
 	Rev: PD3.0
 	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 100mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
------------------------
----- RX Message 1 ----
-PD Rx Header: 0x51A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
+	Type: Source_Capabilities
 	PDO1: Fixed 5200mV @ 4800mA
 	PDO2: Fixed 0mV @ 0mA
 	PDO3: Fixed 750mV @ 8600mA
 	PDO4: Fixed 50mV @ 7700mA
 	PDO5: Fixed 0mV @ 640mA
 -----------------------
----- RX Message 2 ----
+---- RX Message 1 ----
 PD Rx Header: 0x0000
 	MsgID: 0x00
 	Rev: PD1.0
@@ -238,15 +562,15 @@ INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
 Logging paused. Entering debug menu...
 ---- PD Logger Debug Console ----
 s
-[65864] --- Status Update ---
+[20345] --- Status Update ---
 ---- STATUS0 ----
 VBUSOK = 1
-ACTIVITY = 1
+ACTIVITY = 0
 COMP = 0
 CRC_CHK = 0
 ALERT = 0
 WAKE = 0
-BC_LVL1 = 0
+BC_LVL1 = 1
 BC_LVL0 = 1
 
 ---- STATUS1 ----
@@ -362,7 +686,7 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[66088] --- End Status Update ---
+[20570] --- End Status Update ---
 0000: 2C 91 01 0A 2C D1 02 00 F4 C1 03 00 B1 B1 04 00  | ,...,...........
 0010: 45 41 06 00 11 BB A3 7A 00 00 00 00 00 00 00 00  | EA.....z........
 0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
@@ -374,26 +698,14 @@ PD Rx Header: 0x51A1
 	MsgID: 0x00
 	Rev: PD3.0
 	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 100mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
------------------------
----- RX Message 1 ----
-PD Rx Header: 0x51A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
+	Type: Source_Capabilities
 	PDO1: Fixed 5200mV @ 4800mA
 	PDO2: Fixed 0mV @ 0mA
 	PDO3: Fixed 750mV @ 8600mA
 	PDO4: Fixed 50mV @ 7700mA
 	PDO5: Fixed 0mV @ 640mA
 -----------------------
----- RX Message 2 ----
+---- RX Message 1 ----
 PD Rx Header: 0x0000
 	MsgID: 0x00
 	Rev: PD1.0
@@ -401,55 +713,12 @@ PD Rx Header: 0x0000
 	Type: Invalid
 > q
 Returning to live logging...
-[83395] - Dettach detected
-[112803] - Attach detected
-[112809] - CC line on CC2
-[112820] --- Status Update ---
+[36435] - Dettach detected
+[42043] - Attach detected
+[42049] - CC line on CC2
+[42060] --- Status Update ---
 ---- Current FUSB302 State ----
-CC PolarINT: GoodCRC Sent (Packet Received)
----- RX Message 0 ----
-PD Rx Header: 0x51A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 100mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
------------------------
----- RX Message 1 ----
-PD Rx Header: 0x51A1
-	MsgID: 0x00
-	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 5200mV @ 4800mA
-	PDO2: Fixed 0mV @ 0mA
-	PDO3: Fixed 750mV @ 8600mA
-	PDO4: Fixed 50mV @ 7700mA
-	PDO5: Fixed 0mV @ 640mA
------------------------
----- RX Message 2 ----
-PD Rx Header: 0x53A1
-	MsgID: 0x01
-	Rev: PD3.0
-	Count: 5
-	Type: GoodCRC
-	PDO1: Fixed 11600mV @ 4800mA
-	PDO2: Fixed 50mV @ 10230mA
-	PDO3: Fixed 0mV @ 5200mA
-	PDO4: Fixed 650mV @ 7920mA
-	PDO5: Fixed 0mV @ 80mA
------------------------
----- RX Message 3 ----
-PD Rx Header: 0x0000
-	MsgID: 0x00
-	Rev: PD1.0
-	Count: 0
-	Type: Invalid
-ity: 1
+CC Polarity: 1
 VCONN Enabled: 0
 Pulling Down (UFP): 0
 RX Enable: 1
@@ -457,13 +726,45 @@ MDAC VNC: 0x26
 MDAC RD: 0x05
 Device Attached: True
 ---- End State ----
-VBUS Voltage: 420 mV
+VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[112913] --- End Status Update ---
+[42153] --- End Status Update ---
+INT: GoodCRC Sent (Packet Received)
+---- RX Message 0 ----
+PD Rx Header: 0x51A1
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 5200mV @ 4800mA
+	PDO2: Fixed 0mV @ 0mA
+	PDO3: Fixed 750mV @ 8600mA
+	PDO4: Fixed 50mV @ 7700mA
+	PDO5: Fixed 0mV @ 640mA
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x51A1
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 5200mV @ 4800mA
+	PDO2: Fixed 0mV @ 0mA
+	PDO3: Fixed 750mV @ 8600mA
+	PDO4: Fixed 100mV @ 7700mA
+	PDO5: Fixed 0mV @ 640mA
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
+INT: CC line tripped threshold programmed into MDAC (BC_LVL=0x03)
 Logging paused. Entering debug menu...
 ---- PD Logger Debug Console ----
 s
-[122517] --- Status Update ---
+[50577] --- Status Update ---
 ---- STATUS0 ----
 VBUSOK = 1
 ACTIVITY = 0
@@ -587,12 +888,43 @@ Device Attached: True
 ---- End State ----
 VBUS Voltage: 5040 mV
 CC voltage: 2688 mV
-[122742] --- End Status Update ---
-0000: 2C 91 01 08 2C D1 02 00 2C B1 04 00 45 41 06 00  | ,...,...,...EA..
-0010: 64 21 DC C0 0F 4D 68 EE 00 00 00 00 00 00 00 00  | d!...Mh.........
+[50801] --- End Status Update ---
+0000: 2C 91 01 0A 2C D1 02 00 F4 C1 03 00 B1 B1 04 00  | ,...,...........
+0010: 45 41 06 00 11 BB A3 7A 00 00 00 00 00 00 00 00  | EA.....z........
 0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
 0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
 0040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  | ................
+> c
+---- RX Message 0 ----
+PD Rx Header: 0x51A1
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 5200mV @ 4800mA
+	PDO2: Fixed 0mV @ 0mA
+	PDO3: Fixed 750mV @ 8600mA
+	PDO4: Fixed 50mV @ 7700mA
+	PDO5: Fixed 0mV @ 640mA
+-----------------------
+---- RX Message 1 ----
+PD Rx Header: 0x51A1
+	MsgID: 0x00
+	Rev: PD3.0
+	Count: 5
+	Type: Source_Capabilities
+	PDO1: Fixed 5200mV @ 4800mA
+	PDO2: Fixed 0mV @ 0mA
+	PDO3: Fixed 750mV @ 8600mA
+	PDO4: Fixed 100mV @ 7700mA
+	PDO5: Fixed 0mV @ 640mA
+-----------------------
+---- RX Message 2 ----
+PD Rx Header: 0x0000
+	MsgID: 0x00
+	Rev: PD1.0
+	Count: 0
+	Type: Invalid
 > q
 Returning to live logging...
-[130053] - Dettach detected
+[61898] - Dettach detected
