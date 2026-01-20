@@ -1,3 +1,6 @@
-- pd_log_source_caps function: check calculations correct and look into "unknown PDO type"
+FIX:
+- PDO logging incorrect and is likely due to how Rx messages are being saved in struct.
+
+ADD:
 - add drp functionality 
 - make source firmware for testing devices
