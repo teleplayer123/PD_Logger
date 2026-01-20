@@ -50,6 +50,14 @@
 #define PD_SPEC_REV2  1
 #define PD_SPEC_REV3  2
 
+// K-codes for special symbols
+#define PD_SYNC1 0x18
+#define PD_SYNC2 0x11
+#define PD_SYNC3 0x06
+#define PD_RST1 0x07
+#define PD_RST2 0x19
+#define PD_EOP 0x0D
+
 #define ARRAY_SIZE(t) (sizeof(t) / sizeof(t[0]))
 
 #define PDO_FIXED_DUAL_ROLE (1 << 29) // Dual role device
