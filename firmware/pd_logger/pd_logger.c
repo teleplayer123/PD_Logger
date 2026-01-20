@@ -1423,7 +1423,7 @@ static void pd_check_rx_messages(void)
 
 static void pd_dump_rx_messages(void)
 {
-    for (int i = 0; i <= rx_messages_idx; i++) {
+    for (int i = 0; i < rx_messages_idx; i++) {
         usart_printf("---- RX Message %d ----\r\n", i);
         int cnt = PD_HEADER_CNT(rx_messages[i].head);
         int type = PD_HEADER_TYPE(rx_messages[i].head);
