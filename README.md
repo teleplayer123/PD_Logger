@@ -12,3 +12,18 @@ to communicate with the PD Logger over a serial port is included in the firmware
 ![DevBoardPreview](assets/pd_board.png)
 
 ![DevBoard](assets/real_board.jpg)
+
+### Example: Attach & Dettach Charger
+
+Attaching USB-C PD charger:
+![ChargerAttach](assets/example_pics/attach.png)
+
+Enter debug menu (charger still attached):
+![DebugMenu](assets/example_pics/debug_menu.png)
+
+Viewing FUSB302B status registers and state machine status:
+![CheckStatusStart](assets/example_pics/status_snippet.png)
+![CheckStatusEnd](assets/example_pics/status_end_snippet.png)
+
+View saved PD messages and quiting debug console, followed by dettaching the charger:
+![DumpMsgQuitDettach](assets/example_pics/message_dump_quit_dettach.png)
