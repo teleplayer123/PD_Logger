@@ -1437,14 +1437,13 @@ static void pd_check_rx_messages(void)
 {
     uint16_t head;
     uint32_t payload[7];
-    if (rx_messages_idx >= 9) {
+    if (rx_messages_idx > 9) {
         // reach limit, reset index
         rx_messages_idx = 0;
     }
     if (fusb_get_message(payload, &head) == 0) {
         rx_messages[rx_messages_idx].head = head;
         int len = get_num_bytes(head);
-        hexdump((uint8_t *)payload, len);
         memcpy(rx_messages[rx_messages_idx].payload, payload, len);
 #ifdef DEBUG_DUMP
         // save entire fifo buffer
@@ -1550,6 +1549,7 @@ static void pd_send_src_caps(void)
         pd.rev, 0);
     fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, src_pdo);
     usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    // rolling 3 bit message id
     pd.msg_id = (pd.msg_id + 1) & 0x07;
 }
 
@@ -1564,6 +1564,7 @@ static void pd_send_snk_caps(void)
         pd.rev, 0);
     fusb_transmit(TYPEC_MESSAGE_TYPE_SOP, header, snk_pdo);
     usart_printf("Sent Source Capabilities with header: 0x%04X\r\n", header);
+    // rolling 3 bit message id
     pd.msg_id = (pd.msg_id + 1) & 0x07;
 }
 
