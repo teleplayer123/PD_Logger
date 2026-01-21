@@ -19,7 +19,7 @@
  * Globals
  * ------------------------------------------------------------ */
 
-#define DEBUG_DUMP
+//#define DEBUG_DUMP
 #define I2C_TIMEOUT 100000
 
 #define PACKET_IS_GOOD_CRC(head) (PD_HEADER_TYPE(head) == PD_CTRL_GOOD_CRC && PD_HEADER_CNT(head) == 0)
@@ -1066,7 +1066,7 @@ static int fusb_get_message(uint32_t *payload, uint16_t *head)
         len = get_num_bytes(*head) - 2;
 
         // Read payload + CRC (RESTART + STOP)
-        rv |= fusb_xfer(0, 0, buf, len + 4, I2C_XFER_STOP);
+        rv |= fusb_xfer(0, 0, buf, len + 4, I2C_XFER_START | I2C_XFER_STOP);
 
     } while (!rv && PACKET_IS_GOOD_CRC(*head) && !fusb_rx_empty());
 
@@ -1428,10 +1428,9 @@ static void pd_check_rx_messages(void)
     }
     if (fusb_get_message(payload, &head) == 0) {
         rx_messages[rx_messages_idx].head = head;
-        int hdr_cnt = PD_HEADER_CNT(head);
-        for (int i = 0; i < hdr_cnt; i++) {
-            rx_messages[rx_messages_idx].payload[i] = payload[i];
-        }
+        int len = get_num_bytes(head);
+        hexdump((uint8_t *)payload, len);
+        memcpy(rx_messages[rx_messages_idx].payload, payload, len);
 #ifdef DEBUG_DUMP
         // save entire fifo buffer
         save_rx_buffer(rx_messages_idx);
