@@ -1451,8 +1451,6 @@ static void pd_check_rx_messages(void)
 #endif
 
         rx_messages_idx += 1;
-        // flush fifo for good measure
-        fusb_flush_rx_fifo();
     }
 }
 
@@ -1602,6 +1600,7 @@ void exti4_15_isr(void) {
             usart_printf("INT: Hard Reset Received.\r\n");
             // Hard reset requires clearing state and re-initializing fusb302
             fusb_reset();
+            fusb_flush_rx_fifo();
             fusb_setup();
             pd_init(state.pulling_up);
         }
@@ -1611,6 +1610,8 @@ void exti4_15_isr(void) {
             usart_printf("INT: Soft Reset Received.\r\n");
             // Soft reset
             fusb_pd_reset();
+            // flush rx fifo after soft reset
+            fusb_flush_rx_fifo();
         }
 
         // A received message is confirmed when GoodCRC is sent (GCRCSENT)
@@ -1666,6 +1667,8 @@ static void poll(void)
                 usart_printf("[%d] - Dettach detected\r\n", system_millis);
                 // reset fusb302
                 fusb_reset();
+                // flush rx fifo after dettach
+                fusb_flush_rx_fifo();
                 // set default state
                 fusb_setup();
                 pd_init(0);
