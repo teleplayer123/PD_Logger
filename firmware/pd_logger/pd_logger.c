@@ -1490,6 +1490,9 @@ static void pd_dump_rx_messages(bool verbose)
             // hexdump saved fifo buffer
             hexdump(rx_buffers[i].buffer, 80);
 #endif
+            // hexdump payload
+            int len = get_num_bytes(rx_messages[i].head);
+            hexdump((uint8_t *)rx_messages[i].payload, len);
         }
         usart_printf("-----------------------\r\n");
     }
