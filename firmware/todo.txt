@@ -1,6 +1,7 @@
-FIX:
-- PDO logging incorrect and is likely due to how Rx messages are being saved in struct.
+Priotity:
+- expand message parsing to support more types
+- clean up the amount on memcpy calls when saving messages
 
-ADD:
+Goals:
 - add drp functionality 
 - make source firmware for testing devices
