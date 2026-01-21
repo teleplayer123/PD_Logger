@@ -1361,6 +1361,21 @@ static void pd_log_header(uint16_t header)
         usart_printf("\tType: %s\r\n", pd_ctrl_msg_name(type));
 }
 
+/*
+PDO Fixed Mapping:
+31-30   Fixed Supply: value 0b00
+29      Dual-Role Power: set to 1 for DRP device
+28      USB Suspend Supported: set to 1 if supported
+27      Unconstrained Power: set to 1 if unconstrained power available
+26      USB Communications Capable: set to 1 if capable
+25      Dual-Role Data: set to 1 for dual-role data device
+24      Unchunked Extended Messages Supported: set to 1 if supported
+23      EPR Capable: set to 1 if EPR capable
+22      Reserved: shall be set to zero
+21-20   Peak Current: peak current value
+19-10   Voltage: voltage in 50mV units
+9-0     Maximum Current: maximum current in 10mA units
+*/
 static void pd_log_source_caps(const uint32_t *pdo, int count)
 {
     for (int i = 0; i < count; i++) {
