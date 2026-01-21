@@ -1,7 +1,7 @@
 Priotity:
+- handle I_COMP_CHNG interrupt by reading relevant status registers for details about the event
 - expand message parsing to support more types
-- clean up the amount on memcpy calls when saving messages
 
 Goals:
-- add drp functionality 
+- add drp functionality
 - make source firmware for testing devices
