@@ -1,4 +1,4 @@
-### Description
+## Description
 A development board to experiment with USB-C PD via an STM32 and FUSB302. 
 
 The [PD Logger](firmware/pd_logger) firmware logs PD messages, attach/dettach events, CC voltage/orientation, and VBUS voltage. 
@@ -27,3 +27,10 @@ Viewing FUSB302B status registers and state machine status:
 
 View saved PD messages and quiting debug console, followed by dettaching the charger:
 ![DumpMsgQuitDettach](assets/example_pics/message_dump_quit_dettach.png)
+
+### Resources
+Thanks to these projects for helping me learn about USB-C PD and utilizing the FUSB302!
+
+[USB-C-Explorer](https://github.com/ReclaimerLabs/USB-C-Explorer)
+
+[AltmodeFriend](https://github.com/CRImier/AltmodeFriend)
