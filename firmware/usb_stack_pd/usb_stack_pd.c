@@ -23,6 +23,10 @@ static void clock_setup(void)
     rcc_periph_clock_enable(RCC_I2C1);
     // Enable the clock for SYSCFG to configure EXTI.
     rcc_periph_clock_enable(RCC_SYSCFG_COMP);
+    /* Clock Setup for F072 Crystal-less USB */
+    rcc_periph_clock_enable(RCC_CRS);
+    crs_autotrim_usb_enable(); // Enable auto-trimming from USB SOF
+    rcc_set_usbclk_source(RCC_HSI48);
 }
 
 static void i2c_setup(void)
@@ -87,6 +91,24 @@ int _write(int fd, char *ptr, int len)
     return 0;
 }
 
+/* Updated Printf function for USB */
+int usb_printf(const char *format, ...) {
+    char buf[256];
+    va_list args;
+    va_start(args, format);
+    int len = vsnprintf(buf, sizeof(buf), format, args);
+    va_end(args);
+
+    /* Send via Bulk In endpoint 0x82 */
+    int sent = 0;
+    while (sent < len) {
+        int chunk = (len - sent > 64) ? 64 : (len - sent);
+        while (usbd_ep_write_packet(usbdev, 0x82, &buf[sent], chunk) == 0);
+        sent += chunk;
+    }
+    return len;
+}
+
 static void cdcacm_rx_cb(uint8_t *buf, int len) {
     /* Simple command parser: r <reg> | w <reg> <val> */
     if (len < 2) return;
@@ -118,7 +140,7 @@ int main(void) {
     i2c_setup();
     usbdev = usb_cdcacm_init(cdcacm_rx_cb);
 
-    printf("---- PD Debugger ----\r\n");
+    usb_printf("---- PD Debugger ----\r\n");
 
     while (1) {
         usbd_poll(usbdev);
