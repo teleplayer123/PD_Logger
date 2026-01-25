@@ -134,7 +134,7 @@ static const struct usb_config_descriptor config = {
 	.bNumInterfaces = 2,
 	.bConfigurationValue = 1,
 	.iConfiguration = 0,
-	.bmAttributes = 0x80,
+	.bmAttributes = 0xC0, // self powered
 	.bMaxPower = 0x32,
 
 	.interface = ifaces,
@@ -214,9 +214,9 @@ static void cdcacm_set_config(usbd_device *usbd_dev, uint16_t wValue)
 usbd_device *usb_cdcacm_init(void (*rx_cb)(uint8_t *buf, int len))
 {
     cdcacm_rx_cb_user = rx_cb;
-    usbd_dev = usbd_init(&st_usbfs_v2_usb_driver, &dev, &config,
-                           usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+    usbd_dev = usbd_init(&st_usbfs_v2_usb_driver, &dev, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));	
     usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
+	usbd_disconnect(usbd_dev, false);
     return usbd_dev;
 }
 

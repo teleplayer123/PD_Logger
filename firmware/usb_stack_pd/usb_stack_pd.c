@@ -40,6 +40,7 @@ static void usb_setup(void)
     rcc_set_usbclk_source(RCC_HSI48);
     gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
     gpio_set_af(GPIOA, GPIO_AF0, GPIO11 | GPIO12);
+
 }
 
 static void i2c_setup(void)
